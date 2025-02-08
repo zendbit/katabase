@@ -1,5 +1,5 @@
 # Katabase
-This is nimble package plugins for (Katalis)[https://github.com/zendbit/katalis] framework. Not build exclusively for katalis, so we can add it to other project
+This is nimble package plugins for [Katalis](https://github.com/zendbit/katalis) framework. Not build exclusively for katalis, so we can add it to other project
 
 ## Install
 ```sh
