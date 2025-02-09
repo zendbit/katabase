@@ -75,7 +75,7 @@ proc open[T](self: Katabase[T]): T {.gcsafe.} = ## \
       if not result.setEncoding(self.encoding):
         echo &"Failed to set encoding to: {self.encoding}"
 
-  except Exception as ex:
+  except CatchableError as ex:
     let port = $self.port
     let connection = $ type self.connType
     echo &"Failed to open database"
@@ -111,7 +111,7 @@ proc execQuery*[T: PostgreSql|MySql|SqLite](
   try:
     session.exec(sql $query)
 
-  except Exception as ex:
+  except CatchableError as ex:
     echo &"Failed to execute query"
     echo &"Query: {query}"
     echo &"Error: {ex.msg}"
@@ -138,7 +138,7 @@ proc execQueryAffectedRows*[T: PostgreSql|MySql|SqLite](
   try:
     result = session.execAffectedRows(sql $query)
 
-  except Exception as ex:
+  except CatchableError as ex:
     echo &"Failed to execute query"
     echo &"Query: {query}"
     echo &"Error: {ex.msg}"
@@ -169,7 +169,7 @@ proc queryRows*[T: PostgreSql|MySql|SqLite](
           (query.columnNames, r)
       )
 
-  except Exception as ex:
+  except CatchableError as ex:
     echo &"Failed to execute query"
     echo &"Query: {query}"
     echo &"Error: {ex.msg}"
@@ -196,7 +196,7 @@ proc queryOneRow*[T: PostgreSql|MySql|SqLite](
     let res = session.getRow(sql $query)
     result = (query.columnNames, res)
 
-  except Exception as ex:
+  except CatchableError as ex:
     echo &"Failed to execute query"
     echo &"Query: {query}"
     echo &"Error: {ex.msg}"
@@ -222,7 +222,7 @@ proc queryValue*[T: PostgreSql|MySql|SqLite](
   try:
     result = session.getValue(sql $query)
 
-  except Exception as ex:
+  except CatchableError as ex:
     echo &"Failed to execute query"
     echo &"Query: {query}"
     echo &"Error: {ex.msg}"
@@ -247,9 +247,9 @@ proc insertRow*[T: PostgreSql|MySql|SqLite](
   ## primary key should named with id
 
   try:
-    result = session.insertID(sql $query)
+    result = session.insertId(sql $query)
 
-  except Exception as ex:
+  except CatchableError as ex:
     echo &"Failed to execute query"
     echo &"Query: {query}"
     echo &"Error: {ex.msg}"
@@ -281,12 +281,12 @@ proc transactionBegin*[T: PostgreSql|MySql|SqLite](
 
   case session.whichDialect
   of DbPostgreSql:
-    session.execQuery(sql "BEGIN")
+    session.exec(sql "BEGIN")
   of DbMySql:
-    session.execQuery(sql "SET autocommit=0")
-    session.execQuery(sql "START TRANSACTION")
+    session.exec(sql "SET autocommit=0")
+    session.exec(sql "START TRANSACTION")
   of DbSqLite:
-    session.execQuery(sql "BEGIN TRANSACTION")
+    session.exec(sql "BEGIN TRANSACTION")
 
 
 proc transactionRollback*[T: PostgreSql|MySql|SqLite](
@@ -294,7 +294,7 @@ proc transactionRollback*[T: PostgreSql|MySql|SqLite](
   ) {.gcsafe.} = ## \
   ## transaction rollback
 
-  session.execQuery(sql "ROLLBACK")
+  session.exec(sql "ROLLBACK")
 
 
 proc transactionCommit*[T: PostgreSql|MySql|SqLite](
@@ -302,7 +302,7 @@ proc transactionCommit*[T: PostgreSql|MySql|SqLite](
   ) {.gcsafe.} = ## \
   ## transaction commit
 
-  session.execQuery(sql "COMMIT")
+  session.exec(sql "COMMIT")
 
 
 proc createTable*[T: PostgreSql|MySql|SqLite, T2: ref object](
@@ -370,6 +370,22 @@ proc insert*[T: ref object](
   conn.close
 
 
+proc insert*[T: ref object](
+    self: Katabase,
+    table: openArray[T]
+  ): BiggestInt {.gcsafe.} = ## \
+  ## insert into table
+
+  let conn = self.open
+  try:
+    conn.transactionBegin
+    for t in table: discard conn.insert(t)
+    result = table.len
+    conn.transactionCommit
+  except CatchableError: conn.transactionRollback
+  conn.close
+
+
 proc update*[T: PostgreSql|MySql|SqLite, T2: ref object](
     session: T,
     table: T2,
@@ -406,6 +422,23 @@ proc update*[T: ref object](
 
   let conn = self.open
   result = conn.update(table, condition)
+  conn.close
+
+
+proc update*[T: ref object](
+    self: Katabase,
+    table: openArray[T],
+    condition: SqlBuilder = nil
+  ): BiggestInt {.gcsafe.} = ## \
+  ## update database
+
+  let conn = self.open
+  try:
+    conn.transactionBegin
+    for t in table: discard conn.update(t, condition)
+    result = table.len
+    conn.transactionCommit
+  except CatchableError: conn.transactionRollback
   conn.close
 
 
@@ -452,9 +485,11 @@ proc selectOne*[T: PostgreSql|MySql|SqLite, T2: ref object](
     select(t.columnValidNames).
     table(t.validName)
 
-  session.queryOneRow(selectRow).
+  let queryResult = session.queryOneRow(selectRow).
     toDbTable(T2, session.whichDialect, false).
     to(T2)
+
+  if queryResult.id.isSome: result = queryResult
 
 
 proc selectOne*[T: ref object](
@@ -528,3 +563,19 @@ proc delete*[T: ref object](
   result = conn.delete(table, condition)
   conn.close
 
+
+proc delete*[T: ref object](
+    self: Katabase,
+    table: openArray[T],
+    condition: SqlBuilder = nil
+  ): BiggestInt {.gcsafe.} = ## \
+  ## delete from database
+
+  let conn = self.open
+  try:
+    conn.transactionBegin
+    for t in table: discard conn.delete(t, condition)
+    result = table.len
+    conn.transactionCommit
+  except CatchableError: conn.transactionRollback
+  conn.close

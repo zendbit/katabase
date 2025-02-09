@@ -270,3 +270,9 @@ proc getXml*(val: string): Option[XmlNode] {.gcsafe.} = ## \
   try: result = some val.toLower.strip.parseXml
   except: discard
 
+
+proc val*[T](o: Option[T]): T = ## \
+  ## get Option value
+  ## alias .get
+
+  o.get

@@ -13,6 +13,7 @@ type
     groupBy: seq[string]
     having: string
     orderBy: seq[string]
+    orderOption: string
     limit: int
     offset: int
     union: seq[SqlBuilder]
@@ -24,7 +25,7 @@ type
     rightJoin: seq[string]
     rightJoinCondition: seq[string]
     insert: seq[string]
-    value: seq[string]
+    value: seq[seq[string]]
     update: seq[string]
     isDelete: bool
     isCreate: bool
@@ -58,16 +59,16 @@ proc `$`*(sb: SqlBuilder): string {.gcsafe.} = ## \
     query.add("SELECT")
     if sb.isSelectDistinct: query.add("DISTINCT")
     query.add(sb.select.join(", "))
-  
+
   if sb.insert.len != 0:
     query.add("INSERT")
-  
+
   if sb.isCreate:
     query.add("CREATE")
 
   if sb.isDelete:
     query.add("DELETE")
-  
+
   if sb.update.len != 0:
     query.add("UPDATE")
 
@@ -128,7 +129,7 @@ proc `$`*(sb: SqlBuilder): string {.gcsafe.} = ## \
 
       query.add(createTableProperties.join(", "))
       query.add(")")
-    
+
   if sb.insert.len != 0:
     query.add("(")
     query.add(sb.insert.join(", "))
@@ -140,14 +141,15 @@ proc `$`*(sb: SqlBuilder): string {.gcsafe.} = ## \
   if sb.value.len != 0:
     if sb.insert.len != 0:
       query.add("VALUES")
-      query.add("(")
-      query.add(sb.value.join(", "))
-      query.add(")")
+      var insertValue: seq[string]
+      for val in sb.value:
+        insertValue.add("( " & val.join(", ") & " )")
+      query.add(insertValue.join(","))
 
     if sb.update.len != 0:
       var updateStmt: seq[string]
       for i in 0..sb.update.high:
-        updateStmt.add(&"{sb.update[i]} = {sb.value[i]}")
+        updateStmt.add(&"{sb.update[i]} = {sb.value[0][i]}")
 
       query.add(updateStmt.join(", "))
 
@@ -179,7 +181,7 @@ proc `$`*(sb: SqlBuilder): string {.gcsafe.} = ## \
   if sb.groupBy.len != 0:
     query.add("GROUP BY")
     query.add(sb.groupBy.join(", "))
-    
+
   if sb.having != "":
     query.add("HAVING")
     query.add(sb.having)
@@ -187,7 +189,8 @@ proc `$`*(sb: SqlBuilder): string {.gcsafe.} = ## \
   if sb.orderBy.len != 0:
     query.add("ORDER BY")
     query.add(sb.orderBy.join(", "))
-  
+    query.add(sb.orderOption)
+
   if sb.limit != -1:
     query.add("LIMIT")
     query.add($sb.limit)
@@ -215,6 +218,55 @@ template sqlBuild*(): SqlBuilder = ## \
   newSqlBuilder()
 
 
+proc toSqlBuilderValue*[T](
+    value: T
+  ): seq[seq[string]] = ## \
+  ## parse value argument
+  ## make it flexible
+  ## user can pas seq or tuple
+
+  when value isnot seq and value isnot tuple:
+    result.add(@[(%value).toDbValue(true)])
+
+  when value is seq[tuple]:
+    for l in value:
+      var vals: seq[JsonNode]
+      for v in l.fields:
+        vals.add(%v)
+      result.add(vals.toDbValue(true))
+
+  when value is seq[JsonNode]:
+    result.add(value.map(proc (n: JsonNode): string = n.toDbValue(true)))
+
+  when value is seq[seq[JsonNode]]:
+    for v in value:
+      result.add(v.map(proc (n: JsonNode): string = n.toDbValue(true)))
+
+  when value is tuple:
+    var vals: seq[JsonNode]
+    for v in value.fields:
+      vals.add(%v)
+    result.add(vals.toDbValue(true))
+
+
+proc toSqlBuilderParam*[T: seq|tuple|string](
+    value: T
+  ): seq[string] = ## \
+  ## parse value argument
+  ## make it flexible
+  ## user can pas seq or tuple
+
+  when value is string:
+    result.add(value)
+
+  when value is tuple:
+    for v in value.fields:
+      result.add(v)
+
+  when value is seq:
+    result = value
+
+
 proc columnNames*(self: SqlBuilder): seq[string] {.gcsafe.} = ## \
   ## get select columns name
 
@@ -227,13 +279,13 @@ proc columnNames*(self: SqlBuilder): seq[string] {.gcsafe.} = ## \
   )
 
 
-proc select*(
+proc select*[T](
     self: SqlBuilder,
-    column: varargs[string, `$`]
+    column: T
   ): SqlBuilder {.gcsafe discardable.} = ## \
   ## select statement
 
-  self.select &= column.toSeq
+  self.select &= column.toSqlBuilderParam
   self
 
 
@@ -244,9 +296,9 @@ proc create*(self: SqlBuilder): SqlBuilder {.gcsafe discardable.} = ## \
   self
 
 
-proc selectDistinct*(
+proc selectDistinct*[T](
     self: SqlBuilder,
-    column: varargs[string, `$`]
+    column: T
   ): SqlBuilder {.gcsafe discardable.} = ## \
   ## select statement
 
@@ -254,13 +306,13 @@ proc selectDistinct*(
   self
 
 
-proc table*(
+proc table*[T](
     self: SqlBuilder,
-    table: varargs[string, `$`]
+    table: T
   ): SqlBuilder {.gcsafe discardable.} = ## \
   ## from table
 
-  self.table &= table.toSeq
+  self.table &= table.toSqlBuilderParam
   self
 
 
@@ -279,13 +331,13 @@ proc column*(
   self
 
 
-proc primaryKey*(
+proc primaryKey*[T](
     self: SqlBuilder,
-    column: varargs[string, `$`]
+    column: T
   ): SqlBuilder {.gcsafe discardable.} = ## \
   ## primary key
 
-  self.primaryKey &= column.toSeq
+  self.primaryKey &= column.toSqlBuilderParam
   self
 
 
@@ -306,13 +358,13 @@ proc foreignKey*(
   self
 
 
-proc unique*(
+proc unique*[T](
     self: SqlBuilder,
-    column: varargs[string, `$`]
+    column: T
   ): SqlBuilder {.gcsafe discardable.} = ## \
   ## unique value
 
-  self.unique &= column.toSeq
+  self.unique &= column.toSqlBuilderParam
   self
 
 
@@ -338,44 +390,73 @@ proc onDelete*(
 
 proc where*(
     self: SqlBuilder,
-    condition: string,
-    params: varargs[JsonNode, `%`]
+    condition: string
   ): SqlBuilder {.gcsafe discardable.} = ## \
   ## where
 
-  self.where &= condition % params.toSeq.toDbValue(true)
+  self.where &= condition
   self
 
 
-proc groupBy*(
+proc where*[T](
     self: SqlBuilder,
-    column: varargs[string, `$`]
+    condition: string,
+    params: T
+  ): SqlBuilder {.gcsafe discardable.} = ## \
+  ## where
+
+  where(self, condition % params.toSqlBuilderValue[0])
+
+
+proc groupBy*[T](
+    self: SqlBuilder,
+    column: T
   ): SqlBuilder {.gcsafe discardable.} = ## \
   ## group by
 
-  self.groupBy = column.toSeq
+  self.groupBy = column.toSqlBuilderParam
   self
 
 
-proc having*(
+proc having*[T](
     self: SqlBuilder,
     condition: string,
-    params: varargs[JsonNode, `%`]
+    params: T
   ): SqlBuilder {.gcsafe discardable.} = ## \
   ## having
 
-  self.having = condition % params.toSeq.toDbValue(true)
+  self.having = condition % params.toSqlBuilderValue[0]
   self
 
 
-proc orderBy*(
+proc orderBy*[T](
     self: SqlBuilder,
-    column: varargs[string, `$`]
+    column: T,
+    orderOption: string
   ): SqlBuilder {.gcsafe discardable.} = ## \
   ## order by
 
-  self.orderBy = column.toSeq
+  self.orderBy = column.toSqlBuilderParam
+  self.orderOption = orderOption
   self
+
+
+proc orderByAsc*[T](
+    self: SqlBuilder,
+    column: T
+  ): SqlBuilder {.gcsafe discardable.} = ## \
+  ## order by ascending
+
+  orderBy(self, column, "ASC")
+
+
+proc orderByDesc*[T](
+    self: SqlBuilder,
+    column: T
+  ): SqlBuilder {.gcsafe discardable.} = ## \
+  ## order by ascending
+
+  orderBy(self, column, "DESC")
 
 
 proc limit*(
@@ -454,33 +535,33 @@ proc rightJoin*(
   self
 
 
-proc insert*(
+proc insert*[T](
     self: SqlBuilder,
-    column: varargs[string, `$`]
+    column: T
   ): SqlBuilder {.gcsafe discardable.} = ## \
   ## insert data
 
-  self.insert &= column.toSeq
+  self.insert &= column.toSqlBuilderParam
   self
 
 
-proc value*(
+proc value*[T](
     self: SqlBuilder,
-    value: varargs[JsonNode, `%`]
+    value: T
   ): SqlBuilder {.gcsafe discardable.} = ## \
   ## insert value
 
-  self.value &= value.map(proc (n: JsonNode): string = n.toDbValue(true))
+  self.value &= value.toSqlBuilderValue
   self
 
 
-proc update*(
+proc update*[T](
     self: SqlBuilder,
-    column: varargs[string, `$`]
+    column: T
   ): SqlBuilder {.gcsafe discardable.} = ## \
   ## update data
 
-  self.update &= column.toSeq
+  self.update &= column.toSqlBuilderParam
   self
 
 
