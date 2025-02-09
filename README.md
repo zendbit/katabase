@@ -38,3 +38,26 @@ let kbase = newKatabase[MySql](
 )
 ```
 for PostgreSql connection, replace **\[MySql\]** with **\[PostgreSql\]**
+
+## Create katabase type model
+To interact with katabase we need to define type that derived from DbModel
+```nim
+type
+  Users* {.dbTable.} = ref object of DbModel\
+    name*: Option[string]
+    lastUpdate* {.dbColumnType: "TIMESTAMP".} : Option[\
+    isActive*: Option[bool]
+
+  Posts* {.dbTable.} = ref object of DbModel
+    post*: Option[string]
+    usersId* {.dbReference: Users.}: Option[BiggestInt]
+
+  Comments* {.dbTable.} = ref object of DbModel
+    comment*: Option[string]
+    usersId* {.dbReference: Users.}: Option[BiggestInt]
+    postsId* {.dbReference: Posts.}: Option[BiggestInt]
+
+  UsersDetails* {.dbTable.} = ref object of DbModel
+    usersId* {.dbReference: Users.}: Option[BiggestInt]
+    address*: Option[string]
+```
