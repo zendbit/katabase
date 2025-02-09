@@ -21,3 +21,21 @@ then inside katabase repo, run nimble test for testing functionality, you can al
 ```sh
 nimble test
 ```
+
+## Create katabase fo connection
+```nim
+let kbase = newKatabase[SqLite]("", "mydb.db", "", "")
+```
+to connect with MySql/MariaDb and PostgreSql we can use:
+### MySql/MariaDb
+```nim
+let kbase = newKatabase[MySql](
+  "localhost",
+  "dbName",
+  "user",
+  "pass",
+  Port(7000), # if not set will use default port (optional)
+  encoding # if not set will use default encoding (optional)
+)
+```
+for PostgreSql connection, replace **\[MySql\]** with **\[PostgreSql\]**
