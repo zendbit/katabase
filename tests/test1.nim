@@ -9,7 +9,7 @@ import unittest
 
 import std/files
 import std/paths
-import katalis/plugins/katabase
+import katabase
 
 
 ##
