@@ -10,3 +10,14 @@ nimble install https://github.com/zendbit/katabase
 ```nim
 import katalis/plugins/katabase
 ```
+
+## Unit testing
+```sh
+nimble develop https://github.com/zendbit/katabase
+```
+
+then inside katabase repo, run nimble test for testing functionality, you can also see how to use katabase in the unit test file **test/test1.nim**
+
+```sh
+nimble test
+```
