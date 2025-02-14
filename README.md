@@ -177,3 +177,45 @@ type
     post*: Option[string]
     usersId* {.dbReference: Users.}: Option[BiggestInt] ## will reference to table Users as foreignkey
 ```
+
+## Create table schema to database
+```nim
+import katabase
+
+
+type
+  Users* {.dbTable.} = ref object of DbModel
+    name*: Option[string]
+    lastUpdate* {.dbColumnType: "TIMESTAMP".} : Option[string]
+    isActive*: Option[bool]
+
+  Posts* {.dbTable.} = ref object of DbModel
+    post*: Option[string]
+    usersId* {.dbReference: Users.}: Option[BiggestInt]
+
+  Comments* {.dbTable.} = ref object of DbModel
+    comment*: Option[string]
+    usersId* {.dbReference: Users.}: Option[BiggestInt]
+    postsId* {.dbReference: Posts.}: Option[BiggestInt]
+
+  UsersDetails* {.dbTable.} = ref object of DbModel
+    usersId* {.dbReference: Users.}: Option[BiggestInt]
+    address*: Option[string]
+
+
+##
+## Create table schema to sqlite
+##
+
+## conccection type instance
+let kbase = newKatabase[SqLite]("", "local.db", "", "")
+
+##
+## we optionally call create Users
+## Users table will created automatically
+## because it referenced by Posts, Comments and UsersDetails
+##
+kbase.createTable(Posts())
+kbase.createTable(Comments())
+kbase.createTable(UsersDetails())
+```
