@@ -51,9 +51,9 @@ import katabase
 
 
 type
-  Users* {.dbTable.} = ref object of DbModel\
+  Users* {.dbTable.} = ref object of DbModel
     name*: Option[string]
-    lastUpdate* {.dbColumnType: "TIMESTAMP".} : Option[\
+    lastUpdate* {.dbColumnType: "TIMESTAMP".} : Option[string]
     isActive*: Option[bool]
 
   Posts* {.dbTable.} = ref object of DbModel
@@ -71,9 +71,10 @@ type
 ```
 available pragma on DbModel type:
 
-####*Note: all field must in Option[type]
+####*Note:\
+all field must in Option[type]. DbModel type automatically add id field as primary key and index auto increment
 
-**{.dbTable.}**: Database table identifier and name, we can also create custom name by passing table name as parameter
+**{.dbTable.}**: database table identifier and name, we can also create custom name by passing table name as parameter
 ```nim
 type
   Users* {.dbTable.} = ref object of DbModel ## \
@@ -83,7 +84,7 @@ type
   ##
 ```
 
-**{.dbColumnName.}**: Database table column identifier and name, we can pass custom name to column field. if pragma not applied then it will use field name instead
+**{.dbColumnName.}**: database table column identifier and name, we can pass custom name to column field. if pragma not applied then it will use field name instead
 ```nim
 type
   Users* {.dbTable.} = ref object of DbModel ## \
@@ -97,7 +98,7 @@ type
   ##
 ```
 
-**{.dbColumnType.}**: Database table column type, this will usefull if want to map field type to database field type for example we want to set type as VECTOR type in database
+**{.dbColumnType.}**: database table column type, this will usefull if want to map field type to database field type for example we want to set type as VECTOR type in database
 ```nim
 type
   SomeType* {.dbTable.} = ref object of DbModel
@@ -111,7 +112,7 @@ type
 **Option[int-type]** -> should map to numeric type like int, bigint, smallint, etc\
 **Option[float-type]** -> should map to decimal type like float, double, decimal, etc
 
-**{.dbColumnLength.}**: Database table column length, this will set max length of field
+**{.dbColumnLength.}**: database table column length, this will set max length of field
 ```nim
 type
   SomeType* {.dbTable.} = ref object of DbModel
@@ -119,4 +120,60 @@ type
       dbColumnType: "VARCHAR" ## set type to VARCHAR
       dbColumnLength: 100 ## set field length to 100
     .}: Option[string]
+```
+
+**{.dbNullable.}**: treat column field to default NULL
+```nim
+type
+  SomeType* {.dbTable.} = ref object of DbModel
+    someField* {.
+      dbColumnType: "VARCHAR" ## set type to VARCHAR
+      dbColumnLength: 100 ## set field length to 100
+      dbNullable ## set default to NULL
+    .}: Option[string]
+```
+
+**{.dbUnique.}**: treat column field to unique field
+```nim
+type
+  SomeType* {.dbTable.} = ref object of DbModel
+    someField* {.
+      dbColumnType: "VARCHAR" ## set type to VARCHAR
+      dbColumnLength: 100 ## set field length to 100
+      dbNullable ## set default to NULL
+      dbUnique ## treat field as unique
+    .}: Option[string]
+```
+
+**{.dbCompositeUnique.}**: treat column field as composite unique with other field
+```nim
+type
+  SomeType* {.dbTable.} = ref object of DbModel
+    someField* {.
+      dbCompositeUnique ## will unique composite with otherSomeField
+    .}: Option[string]
+    otherSomeField* {.
+      dbCompositeUnique ## will unique composite with someField
+    .}: Option[string]
+```
+
+**{.dbIgnore.}**: this is special pragma, field with this pragma will ignored form database table column creation and from database query
+```nim
+type
+  SomeType* {.dbTable.} = ref object of DbModel
+    someField*: Option[string]
+    otherSomeField* {.dbIgnore.}: Option[string] ## this field will ignored on database creation and from database query
+```
+
+**{.dbReference.}**: create reference to other DbModel as foreignkey
+```nim
+type
+  Users* {.dbTable.} = ref object of DbModel
+    name*: Option[string]
+    lastUpdate* {.dbColumnType: "TIMESTAMP".} : Option[string]
+    isActive*: Option[bool]
+
+  Posts* {.dbTable.} = ref object of DbModel
+    post*: Option[string]
+    usersId* {.dbReference: Users.}: Option[BiggestInt] ## will reference to table Users as foreignkey
 ```
