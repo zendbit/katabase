@@ -71,6 +71,8 @@ type
 ```
 available pragma on DbModel type:
 
+####*Note: all field must in Option[type]
+
 **{.dbTable.}**: Database table identifier and name, we can also create custom name by passing table name as parameter
 ```nim
 type
@@ -78,5 +80,18 @@ type
   ##
   ##  we can pass table name to dbTable pragma
   ##  {.dbTable: "tbl_users".}
+  ##
+```
+**{dbColumnName}**: Database table column identifier and name, we can pass custom name to column field if not applied then it will use field name instead
+```nim
+type
+  Users* {.dbTable.} = ref object of DbModel ## \
+  ##
+  ##  we can pass table name to dbTable pragma
+  ##  {.dbTable: "tbl_users".}
+  ##
+  isActive {.dbColumnName: "is_active".}: Option[bool] ## \
+  ##
+  ## this will map the field isActive to actual database is_active column field
   ##
 ```
