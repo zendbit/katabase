@@ -82,6 +82,7 @@ type
   ##  {.dbTable: "tbl_users".}
   ##
 ```
+
 **{.dbColumnName.}**: Database table column identifier and name, we can pass custom name to column field. if pragma not applied then it will use field name instead
 ```nim
 type
@@ -95,6 +96,7 @@ type
   ## this will map the field isActive to actual database is_active column field
   ##
 ```
+
 **{.dbColumnType.}**: Database table column type, this will usefull if want to map field type to database field type for example we want to set type as VECTOR type in database
 ```nim
 type
@@ -104,6 +106,16 @@ type
     ## this will map string value to VECTOR type in database
     ##
 ```
+
 **Option[string]** -> should map to text type like VARCHAR, CHAR, VECTOR, TEXT, etc\
 **Option[int-type]** -> should map to numeric type like int, bigint, smallint, etc\
 **Option[float-type]** -> should map to decimal type like float, double, decimal, etc
+
+**{.dbColumnLength.}**: Database table column length, this will set max length of field
+type
+  SomeType* {.dbTable.} = ref object of DbModel
+    someField* {.
+      dbColumnType: "VARCHAR" ## set type to VARCHAR
+      dbColumnLength: 100 ## set field length to 100
+    .}: Option[string]
+```
