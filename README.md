@@ -69,3 +69,13 @@ type
     usersId* {.dbReference: Users.}: Option[BiggestInt]
     address*: Option[string]
 ```
+available pragma on DbModel type
+**{.dbTable.}**: Database table identifier and name, we can also create custom name by passing table name as parameter
+```
+type
+  Users* {.dbTable.} = ref object of DbModel ## \
+  ##
+  ##  we can pass table name to dbTable pragma
+  ##  {.dbTable: "tbl_users".}
+  ##
+```
