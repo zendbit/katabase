@@ -2,6 +2,11 @@
 Simple but flexible and powerfull ORM for Nim language. Currently support MySql/MariaDb, SqLite and PostgreSql
 
 ## Install
+from nimble directory
+```sh
+nimble install https://github.com/zendbit/katabase
+```
+direct from git repo
 ```sh
 nimble install https://github.com/zendbit/katabase
 ```
