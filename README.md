@@ -92,10 +92,10 @@ type
   ##  we can pass table name to dbTable pragma
   ##  {.dbTable: "tbl_users".}
   ##
-  isActive {.dbColumnName: "is_active".}: Option[bool] ## \
-  ##
-  ## this will map the field isActive to actual database is_active column field
-  ##
+    isActive {.dbColumnName: "is_active".}: Option[bool] ## \
+    ##
+    ## this will map the field isActive to actual database is_active column field
+    ##
 ```
 
 **{.dbColumnType.}**: database table column type, this will usefull if want to map field type to database field type for example we want to set type as VECTOR type in database
