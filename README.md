@@ -71,7 +71,7 @@ type
 ```
 available pragma on DbModel type
 **{.dbTable.}**: Database table identifier and name, we can also create custom name by passing table name as parameter
-```
+```nim
 type
   Users* {.dbTable.} = ref object of DbModel ## \
   ##
