@@ -74,7 +74,7 @@ available pragma on DbModel type:
 ####*Note:\
 all field must in Option[type]. DbModel type automatically add id field as primary key and index auto increment
 
-**{.dbTable.}**: database table identifier and name, we can also create custom name by passing table name as parameter
+***{.dbTable.}***: database table identifier and name, we can also create custom name by passing table name as parameter
 ```nim
 type
   Users* {.dbTable.} = ref object of DbModel ## \
@@ -84,7 +84,7 @@ type
   ##
 ```
 
-**{.dbColumnName.}**: database table column identifier and name, we can pass custom name to column field. if pragma not applied then it will use field name instead
+***{.dbColumnName.}***: database table column identifier and name, we can pass custom name to column field. if pragma not applied then it will use field name instead
 ```nim
 type
   Users* {.dbTable.} = ref object of DbModel ## \
@@ -98,7 +98,7 @@ type
     ##
 ```
 
-**{.dbColumnType.}**: database table column type, this will usefull if want to map field type to database field type for example we want to set type as VECTOR type in database
+***{.dbColumnType.}***: database table column type, this will usefull if want to map field type to database field type for example we want to set type as VECTOR type in database
 ```nim
 type
   SomeType* {.dbTable.} = ref object of DbModel
@@ -108,11 +108,11 @@ type
     ##
 ```
 
-**Option[string]** -> should map to text type like VARCHAR, CHAR, VECTOR, TEXT, etc\
-**Option[int-type]** -> should map to numeric type like int, bigint, smallint, etc\
-**Option[float-type]** -> should map to decimal type like float, double, decimal, etc
+***Option[string]*** -> should map to text type like VARCHAR, CHAR, VECTOR, TEXT, etc\
+***Option[int-type]*** -> should map to numeric type like int, bigint, smallint, etc\
+***Option[float-type]*** -> should map to decimal type like float, double, decimal, etc
 
-**{.dbColumnLength.}**: database table column length, this will set max length of field
+***{.dbColumnLength.}***: database table column length, this will set max length of field
 ```nim
 type
   SomeType* {.dbTable.} = ref object of DbModel
@@ -122,7 +122,7 @@ type
     .}: Option[string]
 ```
 
-**{.dbNullable.}**: treat column field to default NULL
+***{.dbNullable.}***: treat column field to default NULL
 ```nim
 type
   SomeType* {.dbTable.} = ref object of DbModel
@@ -133,7 +133,7 @@ type
     .}: Option[string]
 ```
 
-**{.dbUnique.}**: treat column field to unique field
+***{.dbUnique.}***: treat column field to unique field
 ```nim
 type
   SomeType* {.dbTable.} = ref object of DbModel
@@ -145,7 +145,7 @@ type
     .}: Option[string]
 ```
 
-**{.dbCompositeUnique.}**: treat column field as composite unique with other field
+***{.dbCompositeUnique.}***: treat column field as composite unique with other field
 ```nim
 type
   SomeType* {.dbTable.} = ref object of DbModel
@@ -157,7 +157,7 @@ type
     .}: Option[string]
 ```
 
-**{.dbIgnore.}**: this is special pragma, field with this pragma will ignored form database table column creation and from database query
+***{.dbIgnore.}***: this is special pragma, field with this pragma will ignored form database table column creation and from database query
 ```nim
 type
   SomeType* {.dbTable.} = ref object of DbModel
@@ -165,7 +165,7 @@ type
     otherSomeField* {.dbIgnore.}: Option[string] ## this field will ignored on database creation and from database query
 ```
 
-**{.dbReference.}**: create reference to other DbModel as foreignkey
+***{.dbReference.}***: create reference to other DbModel as foreignkey
 ```nim
 type
   Users* {.dbTable.} = ref object of DbModel
@@ -249,5 +249,5 @@ echo "query1 query2 and query3 are valids, katabase will handle sql lexical"
 available sql sintax:
 
 ***select(tuple | string)***: select column name from table, ex: select(("id", "name")) | select("id")\
-**table(tuple | stirng)**: table name to be select, ex: table(("tbl1", "tbl2")) | table("tbl1")\
-**where(condition: string, subtitution: tuple|any value)**: where condition, ex: where("Users.id=$# AND Users.isActive=$#", (1, true))\
+***table(tuple | stirng)***: table name to be select, ex: table(("tbl1", "tbl2")) | table("tbl1")\
+***where(condition: string, subtitution: tuple|any value)***: where condition, ex: where("Users.id=$# AND Users.isActive=$#", (1, true))\
