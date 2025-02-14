@@ -104,6 +104,6 @@ type
     ## this will map string value to VECTOR type in database
     ##
 ```
-Option[string] -> should map to text type like VARCHAR, CHAR, VECTOR, TEXT, etc\
-Option[int-type] -> should map to numeric type like int, bigint, smallint, etc\
-Option[float-type] -> should map to decimal type like float, double, decimal, etc
+**Option[string]** -> should map to text type like VARCHAR, CHAR, VECTOR, TEXT, etc\
+**Option[int-type]** -> should map to numeric type like int, bigint, smallint, etc\
+**Option[float-type]** -> should map to decimal type like float, double, decimal, etc
