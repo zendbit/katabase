@@ -4,7 +4,7 @@ Simple but flexible and powerfull ORM for Nim language. Currently support MySql/
 ## Install
 from nimble directory
 ```sh
-nimble install https://github.com/zendbit/katabase
+nimble install katabase
 ```
 direct from git repo
 ```sh
