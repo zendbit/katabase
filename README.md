@@ -112,6 +112,7 @@ type
 **Option[float-type]** -> should map to decimal type like float, double, decimal, etc
 
 **{.dbColumnLength.}**: Database table column length, this will set max length of field
+```nim
 type
   SomeType* {.dbTable.} = ref object of DbModel
     someField* {.
