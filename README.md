@@ -42,6 +42,9 @@ for PostgreSql connection, replace **\[MySql\]** with **\[PostgreSql\]**
 ## Create katabase type model
 To interact with katabase we need to define type that derived from DbModel
 ```nim
+import katabase
+
+
 type
   Users* {.dbTable.} = ref object of DbModel\
     name*: Option[string]
