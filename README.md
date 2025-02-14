@@ -53,8 +53,11 @@ import katabase
 type
   Users* {.dbTable.} = ref object of DbModel
     name*: Option[string]
-    lastUpdate* {.dbColumnType: "TIMESTAMP".} : Option[string]
-    isActive*: Option[bool]
+    lastUpdate* {.
+      dbColumnType: "TIMESTAMP"
+      dbColumnName: "last_update"
+    .}: Option[string]
+    isActive* {.dbColumnName: "is_active".}: Option[bool]
 
   Posts* {.dbTable.} = ref object of DbModel
     post*: Option[string]
