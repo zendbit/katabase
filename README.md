@@ -69,7 +69,8 @@ type
     usersId* {.dbReference: Users.}: Option[BiggestInt]
     address*: Option[string]
 ```
-available pragma on DbModel type
+available pragma on DbModel type:
+
 **{.dbTable.}**: Database table identifier and name, we can also create custom name by passing table name as parameter
 ```nim
 type
