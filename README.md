@@ -245,14 +245,3 @@ let query3 = sqlBuild.
 assert($query1 == $query2 == $query3)
 echo "query1 query2 and query3 are valids, katabase will handle sql lexical"
 ```
-
-available SqlBuilder proc sql sintax:
-
-***select(tuple | string)***:
-- select column name from table, ex: select(("id", "name")) | select("id")
-  
-***table(tuple | stirng)***:
-- table name to be select, ex: table(("tbl1", "tbl2")) | table("tbl1")
-  
-***where(condition: string, subtitution: tuple|any value)***:
-- where condition, ex: where("Users.id=$# AND Users.isActive=$#", (1, true))
