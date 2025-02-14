@@ -74,7 +74,7 @@ type
 ```
 available pragma on DbModel type:
 
-####***Note:***\
+###***Note:***\
 ***all field must in Option[type]. DbModel type automatically add id field as primary key and index auto increment***
 
 ***{.dbTable.}***: database table identifier and name, we can also create custom name by passing table name as parameter
