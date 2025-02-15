@@ -393,8 +393,6 @@ else:
 
 ## Insert using SqlBuilder
 ```nim
-
-```nim
 let userId = kbase.insertRow(
   sqlBuild.
   insert(("name", "last_update", "is_active")).
