@@ -390,3 +390,39 @@ if userInserted != 0:
 else:
   echo "Insert failed"
 ```
+
+## Insert using SqlBuilder
+```nim
+
+```nim
+let userId = kbase.insertRow(
+  sqlBuild.
+  insert(("name", "last_update", "is_active")).
+  value(("Foo", "2025-01-30", true)).
+  table("Users")
+)
+
+if userId != 0:
+  echo "Users inserted with id " & $userId
+else:
+  echo "Insert failed"
+
+## insert multiple value
+let insertedId = kbase.execQueryAffectedRows(
+  sqlBuild.
+  insert(("name", "last_update", "is_active")).
+  value(
+    @[
+      ("Foo", "2025-01-30", true),
+      ("Bar", "2025-01-30", true),
+      ("John", "2025-01-30", true)
+    ]
+  ).
+  table("Users")
+)
+
+if userInserted != 0:
+  echo $userInserted & " Users inserted"
+else:
+  echo "Insert failed"
+```
