@@ -280,5 +280,6 @@ let query2 = sqlBuild.
     sqlBuild.select("DISTINCT usersId").
     table("Posts")
   ).
+  where("AND Users.id = ($#)", 1)
   limit(100)
 ```
