@@ -173,8 +173,11 @@ type
 type
   Users* {.dbTable.} = ref object of DbModel
     name*: Option[string]
-    lastUpdate* {.dbColumnType: "TIMESTAMP".} : Option[string]
-    isActive*: Option[bool]
+    lastUpdate* {.
+      dbColumnType: "TIMESTAMP"
+      dbColumnName: "last_update" ## for simulate column name mapping
+    .} : Option[string]
+    isActive* {.dbColumnName: "is_active".}: Option[bool] ## for simulate column name mapping
 
   Posts* {.dbTable.} = ref object of DbModel
     post*: Option[string]
@@ -189,8 +192,11 @@ import katabase
 type
   Users* {.dbTable.} = ref object of DbModel
     name*: Option[string]
-    lastUpdate* {.dbColumnType: "TIMESTAMP".} : Option[string]
-    isActive*: Option[bool]
+    lastUpdate* {.
+      dbColumnType: "TIMESTAMP"
+      dbColumnName: "last_update" ## for simulate column name mapping
+    .} : Option[string]
+    isActive* {.dbColumnName: "is_active".}: Option[bool] ## for simulate column name mapping
 
   Posts* {.dbTable.} = ref object of DbModel
     post*: Option[string]
@@ -307,3 +313,38 @@ available proc for SqlBuilder
 - **innerJoin(table: string, condition: string)**
 - **leftJoin(table: string, condition: string)**
 - **rightJoin(table: string, condition: string)**
+
+## Work with ORM
+Before we deepdive into SqlBuilder usages, we will start to work with ORM in katabase. Let start using our example
+```nim
+import katabase
+
+
+type
+  Users* {.dbTable.} = ref object of DbModel
+    name*: Option[string]
+    lastUpdate* {.
+      dbColumnType: "TIMESTAMP"
+      dbColumnName: "last_update" ## for simulate column name mapping
+    .} : Option[string]
+    isActive* {.dbColumnName: "is_active".}: Option[bool] ## for simulate column name mapping
+
+  Posts* {.dbTable.} = ref object of DbModel
+    post*: Option[string]
+    usersId* {.dbReference: Users.}: Option[BiggestInt]
+
+
+##
+## Create table schema to sqlite
+##
+
+## conccection type instance
+let kbase = newKatabase[SqLite]("", "local.db", "", "")
+
+##
+## we optionally call create Users
+## Users table will created automatically
+## because it referenced by Posts
+##
+kbase.createTable(Posts())
+```
