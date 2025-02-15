@@ -348,3 +348,45 @@ let kbase = newKatabase[SqLite]("", "local.db", "", "")
 ##
 kbase.createTable(Posts())
 ```
+
+## Insert using ORM
+```nim
+let userId = kbase.insert(
+  Users(
+    name: some "Foo",
+    lastUpdate: some "2025-01-30",
+    isActive: some true
+  )
+)
+
+if userId != 0:
+  echo "Users " & Users.name.get & " inserted with id " & $userId
+else:
+  echo "Insert failed"
+
+## insert multiple value
+let usersInserted = kbase.insert(
+  @[
+    Users(
+      name: some "Foo",
+      lastUpdate: some "2025-01-30",
+      isActive: some true
+    ),
+    Users(
+      name: some "Bar",
+      lastUpdate: some "2025-01-30",
+      isActive: some true
+    ),
+    Users(
+      name: some "John",
+      lastUpdate: some "2025-01-30",
+      isActive: some true
+    )
+  ]
+)
+
+if userInserted != 0:
+  echo $userInserted & " Users inserted"
+else:
+  echo "Insert failed"
+```
