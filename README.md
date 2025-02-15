@@ -279,7 +279,7 @@ let query2 = sqlBuild.
   table(("Users", "Posts")).
   where(
     "Users.id IN ($#)" %
-    sqlBuild.select("DISTINCT usersId").
+    sqlBuild.selectDistinct("usersId").
     table("Posts")
   ).
   where("AND Users.id = ($#)", 1)
@@ -287,3 +287,23 @@ let query2 = sqlBuild.
 
 echo query2
 ```
+available proc for SqlBuilder
+- **select(tuple|string)**
+- **selectDistinct(tuple|string)**
+- **insert(tuple|string)**
+- **update(tuple|string)**
+- **value(tuple|string)**
+- **delete**
+- **table(tuple|string)**
+- **where(condition: string, params: any|tuple)** -> params is optional
+- **groupBy(tuple|string)**
+- **having(condition: string, params: any|tuple)** -> params is optional
+- **orderByAsc(tuple|string)**
+- **orderByDesc(tuple|string)**
+- **limit(limit: int)**
+- **offset(offset: int)**
+- **union(unionWith: SqlBuilder)**
+- **unionAll(unionAll: SqlBuilder)**
+- **innerJoin(table: string, condition: string)**
+- **leftJoin(table: string, condition: string)**
+- **rightJoin(table: string, condition: string)**
