@@ -349,7 +349,7 @@ let kbase = newKatabase[SqLite]("", "local.db", "", "")
 kbase.createTable(Posts())
 ```
 
-## Insert using ORM
+### Insert using ORM
 ```nim
 let userId = kbase.insert(
   Users(
@@ -391,7 +391,7 @@ else:
   echo "Insert failed"
 ```
 
-## Insert using SqlBuilder
+### Insert using SqlBuilder
 ```nim
 let userId = kbase.insertRow(
   sqlBuild.
