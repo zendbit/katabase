@@ -424,3 +424,23 @@ if userInserted != 0:
 else:
   echo "Insert failed"
 ```
+
+## Select using ORM
+```nim
+## select single row
+## $# is for string subtitution with parameter
+let user = kbase.selectOne(Users(), sqlBuild.where("Users.name=$#", "Foo"))
+
+if not user.isNil:
+  echo "User name is " & user.name.get
+  echo "User is active " & $user.isActive.get
+  echo "User last update " & user.lastUpdate.get
+
+## select multiple user
+let users = kbase.select(Users(), sqlBuild.where("Users.name=$# OR Users.name=$#", ("Foo", "Bar")))
+
+for user in users:
+  echo "User name is " & user.name.get
+  echo "User is active " & $user.isActive.get
+  echo "User last update " & user.lastUpdate.get
+```
