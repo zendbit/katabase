@@ -248,3 +248,37 @@ let query3 = sqlBuild.
 assert($query1 == $query2 == $query3)
 echo "query1 query2 and query3 are valids, katabase will handle sql lexical"
 ```
+
+Possibility create complex query using SqlBuilder:
+```nim
+let query1 = sqlBuild.
+  select(
+    (
+      "Users.id AS userId",
+      "Users.name AS username",
+      "post",
+      "Post.id AS postId"
+    )
+  ).
+  table("Users").
+  innerJoin("Posts", "Users.id = Posts.usersId")
+
+## using subquery instead
+
+let query2 = sqlBuild.
+  select(
+    (
+      "Users.id AS userId",
+      "Users.name AS username",
+      "post",
+      "Post.id AS postId"
+    )
+  ).
+  table(("Users", "Posts")).
+  where(
+    "Users.id IN ($#)" %
+    sqlBuild.select("DISTINCT usersId").
+    table("Posts")
+  ).
+  limit(100)
+```
