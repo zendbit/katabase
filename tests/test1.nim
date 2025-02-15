@@ -28,7 +28,7 @@ type
   ## firstname: Option[string]
   ##
   ##
-  Users* {.dbTable.} = ref object of DbModel
+  Users* {.dbTable: "tbl_users".} = ref object of DbModel
     ##
     ## we also can add table alias to the Users
     ## if we add table alias in the actual database name will
@@ -40,7 +40,10 @@ type
     ## as table name
     ##
     name*: Option[string]
-    lastUpdate* {.dbColumnType: "TIMESTAMP".} : Option[string]
+    lastUpdate* {.
+      dbColumnType: "TIMESTAMP"
+      dbColumnName: "last_update"
+    .} : Option[string]
     ##
     ## we can also add custom columntype depend on the specific database
     ## for example in the sqlite doesn't have vector type
@@ -54,9 +57,7 @@ type
     ##   dbColumnName: "tbl_some_field_name" -> for custom alias name
     ##   dbColumnType: "VARCHAR" -> for specific type
     ##   dbColumnLength: 10 -> set length of field
-    ##   dbPrimaryKey -> treat field as primary key
     ##   dbNullable -> treat field as default NULL
-    ##   dbAutoIncrement -> treat field as autoincrement
     ##   dbUnique -> treat field as unique
     ##   dbCompositeUnique -> same as dbUnique, but will compose with other
     ##   dbIgnore -> ignored field from query and db operation
@@ -67,7 +68,7 @@ type
     ## in postgresql we need to set dbColumnType: "SERIAL|BIGSERIAL" for auto
     ## increment
     ##
-    isActive*: Option[bool]
+    isActive* {.dbColumnName: "is_active".}: Option[bool]
 
   Posts* {.dbTable.} = ref object of DbModel
     post*: Option[string]
@@ -172,7 +173,7 @@ test "test katabase functionality":
   ##
   ## lets try to update some field
   ##
-  var user = kbase.selectOne(Users(), sqlBuild.where("Users.name=$# AND Users.isActive=$#", ("Foo", false)))
+  var user = kbase.selectOne(Users(), sqlBuild.where("Users.name=$# AND Users.is_active=$#", ("Foo", false)))
   if not user.isNil:
     user.lastUpdate = some "2025-02-25"
     user.isActive = some false
@@ -235,7 +236,7 @@ test "test katabase functionality":
 
   if kbase.queryRows(
       sqlBuild.
-      select(("id", "name", "lastUpdate", "isActive")).
+      select(("id", "name", "last_update", "is_active")).
       table("Users").
       where("Users.name NOT IN ($#)", @["Foo", "Bar", "Blah"].join(", "))
     ).len == 0:
@@ -245,7 +246,7 @@ test "test katabase functionality":
     echo "== Test insert raw single"
     let userId = kbase.insertRow(
         sqlBuild.
-          insert(("name", "lastUpdate", "isActive")).
+          insert(("name", "last_update", "is_active")).
           value(("Foo", "2025-01-30", true)).
           table("Users")
       )
@@ -262,7 +263,7 @@ test "test katabase functionality":
     echo "== Test insert raw multiple"
     var numUserInserted = kbase.execQueryAffectedRows(
         sqlBuild.
-          insert(("name", "lastUpdate", "isActive")).
+          insert(("name", "last_update", "is_active")).
           value(
             @[
               ("Bar", "2025-01-30", true),
@@ -274,7 +275,7 @@ test "test katabase functionality":
 
   var usersRaw = kbase.queryRows(
       sqlBuild.
-      select(("id", "name", "lastUpdate", "isActive")).
+      select(("id", "name", "last_update", "is_active")).
       table("Users")
     )
 
@@ -282,7 +283,8 @@ test "test katabase functionality":
     echo "======="
     echo "User name " & user["name"]
     echo "User id " & $user["id"].getInt.val
-    echo "User last update " & user["lastUpdate"]
+    echo "User last update " & user["last_update"]
+    echo "User is active " & user["is_active"]
 
   ##
   ##

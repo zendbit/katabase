@@ -125,13 +125,13 @@ proc toSql*(self: DbTableModel): SqlBuilder {.gcsafe.} = ## \
         if column.dialect == DbPostgreSql and
           column.isAutoIncrement:
           columnType = "BIGSERIAL"
-        
+
         elif column.dialect == DbSqLite:
           columnType = "INTEGER"
 
       elif column.typeOf.isOptionalFloatMember:
         columnType = "DOUBLE PRECISION"
-        
+
         if column.dialect == DbSqLite:
           columnType = "REAL"
 
@@ -228,7 +228,9 @@ proc toDbTable*(
 
   let table = t().toDbTable(dialect, withReference)
   for i in 0..row.val.high:
-    if table.columns[i].name != row.key[i]: continue
+    if table.columns[i].name != row.key[i] and
+      table.columns[i].alias != row.key[i]: continue
+
     table.columns[i].value = row.val[i].
       toColumnValue(table.columns[i].typeOf)
 

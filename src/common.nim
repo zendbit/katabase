@@ -188,35 +188,35 @@ proc isNullOrEmpty*(val: string): bool {.gcsafe.} = ## \
 proc getInt*(val: string): Option[int] {.gcsafe.} = ## \
   ## get int value
 
-  try: result = some val.toLower.strip.parseInt
+  try: result = some val.strip.parseInt
   except: discard
 
 
 proc getUInt*(val: string): Option[uint] {.gcsafe.} = ## \
   ## get uint value
 
-  try: result = some val.toLower.strip.parseUInt
+  try: result = some val.strip.parseUInt
   except: discard
 
 
 proc getBiggestInt*(val: string): Option[BiggestInt] {.gcsafe.} = ## \
   ## get BiggestInt value
 
-  try: result = some val.toLower.strip.parseBiggestInt
+  try: result = some val.strip.parseBiggestInt
   except: discard
 
 
 proc getBiggestUInt*(val: string): Option[BiggestUInt] {.gcsafe.} = ## \
   ## get BiggestUInt value
 
-  try: result = some val.toLower.strip.parseBiggestUInt
+  try: result = some val.strip.parseBiggestUInt
   except: discard
 
 
 proc getFloat*(val: string): Option[float] {.gcsafe.} = ## \
   ## get float value
 
-  try: result = some val.toLower.strip.parseFloat
+  try: result = some val.strip.parseFloat
   except: discard
 
 
@@ -225,49 +225,49 @@ proc getBool*(val: string): Option[bool] {.gcsafe.} = ## \
 
   if val.toLower.strip == "t": return some true
   if val.toLower.strip == "f": return some false
-  try: result = some val.toLower.strip.parseBool
+  try: result = some val.strip.parseBool
   except: discard
 
 
 proc getBinInt*(val: string): Option[int] {.gcsafe.} = ## \
   ## get binary value to int
 
-  try: result = some val.toLower.strip.parseBinInt
+  try: result = some val.strip.parseBinInt
   except: discard
 
 
 proc getHexInt*(val: string): Option[int] {.gcsafe.} = ## \
   ## get hex value to int
 
-  try: result = some val.toLower.strip.parseHexInt
+  try: result = some val.strip.parseHexInt
   except: discard
 
 
 proc getHexStr*(val: string): Option[string] {.gcsafe.} = ## \
   ## get hex encoded value to byte str
 
-  try: result = some val.toLower.strip.parseHexStr
+  try: result = some val.strip.parseHexStr
   except: discard
 
 
 proc getOctInt*(val: string): Option[int] {.gcsafe.} = ## \
   ## get octal value to int
 
-  try: result = some val.toLower.strip.parseOctInt
+  try: result = some val.strip.parseOctInt
   except: discard
 
 
 proc getJson*(val: string): Option[JsonNode] {.gcsafe.} = ## \
   ## get json node value
 
-  try: result = some val.toLower.strip.parseJson
+  try: result = some val.strip.parseJson
   except: discard
 
 
 proc getXml*(val: string): Option[XmlNode] {.gcsafe.} = ## \
   ## get xml node value
 
-  try: result = some val.toLower.strip.parseXml
+  try: result = some val.strip.parseXml
   except: discard
 
 

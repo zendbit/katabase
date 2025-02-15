@@ -418,6 +418,16 @@ proc groupBy*[T](
   self
 
 
+proc having*(
+    self: SqlBuilder,
+    condition: string
+  ): SqlBuilder {.gcsafe discardable.} = ## \
+  ## having
+
+  self.having = condition
+  self
+
+
 proc having*[T](
     self: SqlBuilder,
     condition: string,
@@ -425,8 +435,7 @@ proc having*[T](
   ): SqlBuilder {.gcsafe discardable.} = ## \
   ## having
 
-  self.having = condition % params.toSqlBuilderValue[0]
-  self
+  having(self, condition % params.toSqlBuilderValue[0])
 
 
 proc orderBy*[T](
@@ -491,11 +500,11 @@ proc union*(
 
 proc unionAll*(
     self: SqlBuilder,
-    unionWith: SqlBuilder
+    unionAll: SqlBuilder
   ): SqlBuilder {.gcsafe discardable.} = ## \
   ## union with other table
 
-  self.unionAll.add(unionWith)
+  self.unionAll.add(unionAll)
   self
 
 
