@@ -263,6 +263,8 @@ let query1 = sqlBuild.
   table("Users").
   innerJoin("Posts", "Users.id = Posts.usersId")
 
+echo query1
+
 ## using subquery instead
 
 let query2 = sqlBuild.
@@ -282,4 +284,6 @@ let query2 = sqlBuild.
   ).
   where("AND Users.id = ($#)", 1)
   limit(100)
+
+echo query2
 ```
