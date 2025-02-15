@@ -444,3 +444,55 @@ for user in users:
   echo "User is active " & $user.isActive.get
   echo "User last update " & user.lastUpdate.get
 ```
+
+## Select using SqlBuilder
+```nim
+## select single row
+## $# is for string subtitution with parameter
+let user = kbase.queryOneRow(
+    sqlBuild.
+    select(("name", "last_update", "is_active")).
+    table("Users").
+    where("Users.name=$#", "Foo")
+  )
+
+##
+## all return value is in string
+## we need to get value depend on our need
+##
+if not user["id"].isNullOrEmpty:
+  echo "User name is " & user["name"]
+  echo "User is active " & $user["is_active"].getBiggestInt.val
+  echo "User last update " & user["last_update"].val
+
+## select multiple user
+let users = kbase.select(
+    sqlBuild.
+    select(("name", "last_update", "is_active")).
+    table("Users").
+    where("Users.name IN ($#)" % @["Foo", "Bar"].join(","))
+  )
+
+for user in users:
+  echo "User name is " & user["name"]
+  echo "User is active " & $user["is_active"].getBiggestInt.val
+  echo "User last update " & user["last_update"].val
+```
+
+available fields conversion in raw query using SqlBuilder:
+
+- **isNull**: check if field is NULL result
+- **isEmpty**: check if field is empty
+- **isNullOrEmpty**: check if field is NULL or empty
+- **getBiggestInt.val**: get biggestInt value from field result
+- **getBiggestUInt.val**: get biggestUInt value from field result
+- **getInt.val**: get int value
+- **getUInt.val**: get unsigned int value
+- **getFloat.val**: get fractional value, ie double, float or decimal
+- **getBool.val**: get boolean value
+- **getBinInt.val**: get binary value as int from binary string, ie "b0001_1111"
+- **getHexInt.val**: get hex value to int
+- **getHexStr.val**: get encoded value to byte string representation
+- **getOctInt.val**: get octal value to int
+- **getJson.val**: get json value
+- **getXml.val**: get xml value
