@@ -463,7 +463,7 @@ let user = kbase.queryOneRow(
 if not user["id"].isNullOrEmpty:
   echo "User name is " & user["name"]
   echo "User is active " & $user["is_active"].getBiggestInt.val
-  echo "User last update " & user["last_update"].val
+  echo "User last update " & user["last_update"].getBool.val
 
 ## select multiple user
 let users = kbase.select(
@@ -476,7 +476,7 @@ let users = kbase.select(
 for user in users:
   echo "User name is " & user["name"]
   echo "User is active " & $user["is_active"].getBiggestInt.val
-  echo "User last update " & user["last_update"].val
+  echo "User last update " & user["last_update"].getBool.val
 ```
 
 available fields conversion in raw query using SqlBuilder:
