@@ -496,3 +496,37 @@ available fields conversion in raw query using SqlBuilder:
 - **getOctInt.val**: get octal value to int
 - **getJson.val**: get json value
 - **getXml.val**: get xml value
+
+## Update using ORM
+```nim
+echo "Test update single record"
+var user = kbase.selectOne(Users(), sqlBuild.where("Users.name=$# AND Users.is_active=$#", ("Foo", false)))
+if not user.isNil:
+  user.lastUpdate = some "2025-02-25"
+  user.isActive = some false
+
+  echo "Update affected row " & $kbase.update(user)
+
+  let user = kbase.selectOne(Users(), sqlBuild.where("Users.name=$#", "Foo"))
+  if not user.isNil:
+    echo "Modify last update to " & user.lastUpdate.get
+    echo "Modify is active to " & $user.isActive.get
+
+echo ""
+echo "Test update multiple record"
+var users = kbase.select(Users())
+for user in users:
+  user.isActive = some false
+  user.lastUpdate = some "2025-02-25"
+
+  echo $kbase.update(users) & " users modified."
+
+  users = kbase.select(Users())
+  for user in users:
+    echo "name " & user.name.get
+    echo "is active " & $user.isActive.get
+```
+
+## Update using SqlBuilder
+```nim
+```
