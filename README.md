@@ -551,6 +551,21 @@ echo ""
 echo "Test multiple delete"
 let users = kbase.select(Users(), sqlBuild.where("Users.name IN ($#)", @["Foo", "Bar"].join(", ")))
 let userDeleted = kbase.delete(users)
+
 if userDeleted != 0:
-  echo $userDeleted & " User deleted."
+  echo $userDeleted & " User(s) deleted."
+```
+
+## Delete using SqlBuilder
+```nim
+echo "Test delete"
+let userDeleted = kbase.execQueryAffectedRows(
+    sqlBuild.
+    delete.
+    table("Users").
+    where("Users.name IN ($#)", @["Foo", "Bar"].join(", "))
+  )
+
+if userDeleted != 0:
+  echo $userDeleted & " User(s) deleted."
 ```
