@@ -531,10 +531,10 @@ for user in users:
 ```nim
 let updatedRow = kbase.execQueryAffectedRows(
     sqlBuild.
-      update(("is_active", "last_update")).
-      value((false, "2025-02-20")).
-      table("Users").
-      where("Users.is_active = $# AND Users.last_update <> '$#'", (true, "2025-02-20"))
+    update(("is_active", "last_update")).
+    value((false, "2025-02-20")).
+    table("Users").
+    where("Users.is_active = $# AND Users.last_update <> '$#'", (true, "2025-02-20"))
   )
 
 echo $updatedRow & " record modified."
