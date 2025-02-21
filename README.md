@@ -529,4 +529,13 @@ for user in users:
 
 ## Update using SqlBuilder
 ```nim
+let updatedRow = kbase.execQueryAffectedRows(
+    sqlBuild.
+      update(("is_active", "last_update")).
+      value((false, "2025-02-20")).
+      table("Users").
+      where("Users.is_active = $# AND Users.last_update <> '2025-02-20'", true)
+  )
+
+echo $updatedRow & " record modified."
 ```
