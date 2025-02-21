@@ -539,3 +539,18 @@ let updatedRow = kbase.execQueryAffectedRows(
 
 echo $updatedRow & " record modified."
 ```
+
+## Delete using ORM
+```nim
+echo "Test single delete"
+let user = kbase.selectOne(Users(), sqlBuild.where("Users.name=$#", "Foo"))
+if not user.isNil and kbase.delete(user) != 0:
+  echo "User " & user.name.get & " deleted."
+
+echo ""
+echo "Test multiple delete"
+let users = kbase.select(Users(), sqlBuild.where("Users.name IN ($#)", @["Foo", "Bar"].join(", ")))
+let userDeleted = kbase.delete(users)
+if userDeleted != 0:
+  echo $userDeleted & " User deleted."
+```
