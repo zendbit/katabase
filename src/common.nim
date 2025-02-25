@@ -28,7 +28,7 @@ export
   xmltree
 
 
-let dbEscape* = db_postgres.dbQuote
+let dbEscape* = db_sqlite.dbQuote
 
 type
   DbDialect* = enum
