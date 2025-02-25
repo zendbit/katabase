@@ -569,3 +569,124 @@ let userDeleted = kbase.execQueryAffectedRows(
 if userDeleted != 0:
   echo $userDeleted & " User(s) deleted."
 ```
+
+### Example complex query using SqlBuilder
+```nim
+var userRaw = kbase.queryOneRow(
+    sqlBuild.
+    select(("id", "name")).
+    table("Users").
+    where("Users.name=$#", "Foo")
+  )
+
+## check if result query id not empty
+if not userRaw["id"].isNullOrEmpty:
+  ##
+  ## lets try to add some post data
+  ##
+  discard kbase.insertRow(
+    sqlBuild.
+    insert(("post", "usersId")).
+    value(("best practice", userRaw["id"].getBiggestInt.val)).
+    table("Posts")
+  )
+
+##
+## select join
+##
+
+var usersRaw = kbase.queryRows(
+    sqlBuild.
+    select(
+      (
+        "Users.id AS userId",
+        "Users.name AS userName",
+        "post",
+        "Posts.id AS postId"
+      )
+    ).
+    table("Users").
+    innerJoin("Posts", "Users.id = Posts.usersId")
+  )
+
+for user in usersRaw:
+  echo "========="
+  echo "User id " & $user["userId"].getBiggestInt.val
+  echo "User name " & user["userName"]
+  echo "User post " & user["post"]
+  echo "Post id " & $user["postId"].getBiggestInt.val
+
+
+##
+## lets try to modify
+##
+echo "== Test modify data"
+userRaw = kbase.queryOneRow(
+    sqlBuild.
+    select(
+      (
+        "Users.id AS userId",
+        "Users.name AS userName",
+        "post",
+        "Posts.id AS postId"
+      )
+    ).
+    table("Users").
+    innerJoin("Posts", "Users.id = Posts.usersId")
+  )
+
+var updatedRow = kbase.execQueryAffectedRows(
+    sqlBuild.
+    update("post").
+    value("practice every day").
+    table("Posts").
+    where("Posts.id = $#", userRaw["postId"].getBiggestInt.val)
+  )
+
+echo $updatedRow & " record modified."
+
+usersRaw = kbase.queryRows(
+    sqlBuild.
+    select(
+      (
+        "Users.id AS userId",
+        "Users.name AS userName",
+        "post",
+        "Posts.id AS postId"
+      )
+    ).
+    table("Users").
+    innerJoin("Posts", "Users.id = Posts.usersId").
+    orderByAsc("userId")
+  )
+
+for user in usersRaw:
+  echo "========="
+  echo "User id " & $user["userId"].getBiggestInt.val
+  echo "User name " & user["userName"]
+  echo "User post " & user["post"]
+  echo "Post id " & $user["postId"].getBiggestInt.val
+
+
+##
+## try with subquery
+##
+
+var posts = kbase.queryRows(
+    sqlBuild.
+    select(("post", "usersId")).
+    table("Posts").
+    where(
+      "Posts.usersId IN ($#)" %
+      $sqlBuild.
+      select("id").
+      table("Users").
+      where("Users.name=$#", "Blah")
+    )
+  )
+
+for post in posts:
+  echo "========="
+  echo "Post id " & $post["id"].getBiggestInt.val
+  echo "Post content " & post["post"]
+```
