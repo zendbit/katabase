@@ -417,7 +417,7 @@ test "test katabase functionality":
   ## try with subquery
   ##
 
-  var posts = kbase.queryRows(
+  var posts = waitFor kbase.queryRows(
       sqlBuild.
       select(("post", "usersId")).
       table("Posts").

@@ -7,10 +7,12 @@ export
 
 import
   std/[
-    nativesockets
+    nativesockets,
+    asyncdispatch
   ]
 export
-  Port
+  Port,
+  asyncdispatch
 
 
 type
@@ -117,6 +119,15 @@ proc execQuery*[T: PostgreSql|MySql|SqLite](
     echo &"Error: {ex.msg}"
 
 
+proc execQueryAsync*[T: PostgreSql|MySql|SqLite](
+    session: T,
+    query: SqlBuilder
+  ) {.async gcsafe.} = ## \
+  ## execute query async
+
+  session.execQuery(query)
+
+
 proc execQuery*(
     self: Katabase,
     query: SqlBuilder
@@ -126,6 +137,15 @@ proc execQuery*(
   let conn = self.open
   conn.execQuery(query)
   conn.close
+
+
+proc execQueryAsync*(
+    self: Katabase,
+    query: SqlBuilder
+  ) {.async gcsafe.} = ## \
+  ## execute query async
+
+  self.execQuery(query)
 
 
 proc execQueryAffectedRows*[T: PostgreSql|MySql|SqLite](
@@ -144,6 +164,16 @@ proc execQueryAffectedRows*[T: PostgreSql|MySql|SqLite](
     echo &"Error: {ex.msg}"
 
 
+proc execQueryAffectedRowsAsync*[T: PostgreSql|MySql|SqLite](
+    session: T,
+    query: SqlBuilder
+  ): Future[int64] {.async gcsafe.} = ## \
+  ## execute query async then return affected rows
+  ## usually for updates statement
+
+  session.execQueryAffectedRows(query)
+
+
 proc execQueryAffectedRows*(
     self: Katabase,
     query: SqlBuilder
@@ -154,6 +184,16 @@ proc execQueryAffectedRows*(
   let conn = self.open
   result = conn.execQueryAffectedRows(query)
   conn.close
+
+
+proc execQueryAffectedRowsAsync*(
+    self: Katabase,
+    query: SqlBuilder
+  ): Future[int64] {.async gcsafe.} = ## \
+  ## execute query async then return affected rows
+  ## usually for updates statement
+
+  self.execQueryAffectedRows(query)
 
 
 proc queryRows*[T: PostgreSql|MySql|SqLite](
@@ -175,6 +215,15 @@ proc queryRows*[T: PostgreSql|MySql|SqLite](
     echo &"Error: {ex.msg}"
 
 
+proc queryRowsAsync*[T: PostgreSql|MySql|SqLite](
+    session: T,
+    query: SqlBuilder
+  ): Future[RowResults] {.async gcsafe.} = ## \
+  ## get all rows async from query statement
+
+  session.queryRows(query)
+
+
 proc queryRows*(
     self: Katabase,
     query: SqlBuilder
@@ -184,6 +233,15 @@ proc queryRows*(
   let conn = self.open
   result = conn.queryRows(query)
   conn.close
+
+
+proc queryRowsAsync*(
+    self: Katabase,
+    query: SqlBuilder
+  ): Future[RowResults] {.async gcsafe.} = ## \
+  ## get all rows async from query statement
+
+  self.queryRows(query)
 
 
 proc queryOneRow*[T: PostgreSql|MySql|SqLite](
@@ -202,6 +260,15 @@ proc queryOneRow*[T: PostgreSql|MySql|SqLite](
     echo &"Error: {ex.msg}"
 
 
+proc queryOneRowAsync*[T: PostgreSql|MySql|SqLite](
+    session: T,
+    query: SqlBuilder
+  ): Future[RowResult] {.async gcsafe.} = ## \
+  ## get row async from query
+
+  session.queryOneRow(query)
+
+
 proc queryOneRow*(
     self: Katabase,
     query: SqlBuilder
@@ -211,6 +278,15 @@ proc queryOneRow*(
   let conn = self.open
   result = conn.queryOneRow(query)
   conn.close
+
+
+proc queryOneRowAsync*(
+    self: Katabase,
+    query: SqlBuilder
+  ): Future[RowResult] {.async gcsafe.} = ## \
+  ## get row async from query
+
+  self.queryOneRow(query)
 
 
 proc queryValue*[T: PostgreSql|MySql|SqLite](
@@ -228,6 +304,15 @@ proc queryValue*[T: PostgreSql|MySql|SqLite](
     echo &"Error: {ex.msg}"
 
 
+proc queryValueAsync*[T: PostgreSql|MySql|SqLite](
+    session: T,
+    query: SqlBuilder
+  ): Future[string] {.async gcsafe.} = ## \
+  ## get single value async of first row first column
+
+  session.queryValue(query)
+
+
 proc queryValue*(
     self: Katabase,
     query: SqlBuilder
@@ -237,6 +322,15 @@ proc queryValue*(
   let conn = self.open
   result = conn.queryValue(query)
   conn.close
+
+
+proc queryValueAsync*(
+    self: Katabase,
+    query: SqlBuilder
+  ): Future[string] {.async gcsafe.} = ## \
+  ## get single value async of first row first column
+
+  self.queryValue(query)
 
 
 proc insertRow*[T: PostgreSql|MySql|SqLite](
@@ -255,6 +349,16 @@ proc insertRow*[T: PostgreSql|MySql|SqLite](
     echo &"Error: {ex.msg}"
 
 
+proc insertRowAsync*[T: PostgreSql|MySql|SqLite](
+    session: T,
+    query: SqlBuilder
+  ): Future[int64] {.async gcsafe.} = ## \
+  ## insert into table async and return generated id primary key
+  ## primary key should named with id
+
+  session.insertRow(query)
+
+
 proc insertRow*(
     self: Katabase,
     query: SqlBuilder
@@ -265,6 +369,16 @@ proc insertRow*(
   let conn = self.open
   result = conn.insertRow(query)
   conn.close
+
+
+proc insertRowAsync*(
+    self: Katabase,
+    query: SqlBuilder
+  ): Future[int64] {.async gcsafe.} = ## \
+  ## insert into table async and return generated id primary key
+  ## primary key should named with id
+
+  self.insertRow(query)
 
 
 proc session*[T](self:Katabase[T]): T = ## \
@@ -289,6 +403,14 @@ proc transactionBegin*[T: PostgreSql|MySql|SqLite](
     session.exec(sql "BEGIN TRANSACTION")
 
 
+proc transactionBeginAsync*[T: PostgreSql|MySql|SqLite](
+    session: T
+  ) {.async gcsafe.} = ## \
+  ## transaction begin async
+
+  session.transactionBegin
+
+
 proc transactionRollback*[T: PostgreSql|MySql|SqLite](
     session: T
   ) {.gcsafe.} = ## \
@@ -297,12 +419,28 @@ proc transactionRollback*[T: PostgreSql|MySql|SqLite](
   session.exec(sql "ROLLBACK")
 
 
+proc transactionRollbackAsync*[T: PostgreSql|MySql|SqLite](
+    session: T
+  ) {.async gcsafe.} = ## \
+  ## transaction rollback async
+
+  session.transactionRollback
+
+
 proc transactionCommit*[T: PostgreSql|MySql|SqLite](
     session: T
   ) {.gcsafe.} = ## \
   ## transaction commit
 
   session.exec(sql "COMMIT")
+
+
+proc transactionCommitAsync*[T: PostgreSql|MySql|SqLite](
+    session: T
+  ) {.async gcsafe.} = ## \
+  ## transaction commit async
+
+  session.transactionCommit
 
 
 proc createTable*[T: PostgreSql|MySql|SqLite, T2: ref object](
@@ -322,6 +460,15 @@ proc createTable*[T: PostgreSql|MySql|SqLite, T2: ref object](
   t.initTable
 
 
+proc createTableAsync*[T: PostgreSql|MySql|SqLite, T2: ref object](
+    session: T,
+    table: T2
+  ) {.async gcsafe.} = ## \
+  ## create table async from DbTable object
+
+  session.createTable(table)
+
+
 proc createTable*[T: ref object](
     self: Katabase,
     table: T
@@ -331,6 +478,15 @@ proc createTable*[T: ref object](
   let conn = self.open
   conn.createTable(table)
   conn.close
+
+
+proc createTableAsync*[T: ref object](
+    self: Katabase,
+    table: T
+  ) {.async gcsafe.} = ## \
+  ## create table async from DbTable object
+
+  self.createTable(table)
 
 
 proc insert*[T: PostgreSql|MySql|SqLite, T2: ref object](
@@ -359,6 +515,15 @@ proc insert*[T: PostgreSql|MySql|SqLite, T2: ref object](
   )
 
 
+proc insertAsync*[T: PostgreSql|MySql|SqLite, T2: ref object](
+    session: T,
+    t: T2
+  ): Future[BiggestInt] {.async gcsafe.} = ## \
+  ## insert
+
+  session.insert(t)
+
+
 proc insert*[T: ref object](
     self: Katabase,
     table: T
@@ -368,6 +533,15 @@ proc insert*[T: ref object](
   let conn = self.open
   result = conn.insert(table)
   conn.close
+
+
+proc insertAsync*[T: ref object](
+    self: Katabase,
+    table: T
+  ): Future[BiggestInt] {.async gcsafe.} = ## \
+  ## insert into table async
+
+  self.insert(table)
 
 
 proc insert*[T: ref object](
@@ -384,6 +558,15 @@ proc insert*[T: ref object](
     conn.transactionCommit
   except CatchableError: conn.transactionRollback
   conn.close
+
+
+proc insertAsync*[T: ref object](
+    self: Katabase,
+    table: openArray[T]
+  ): Future[BiggestInt] {.async gcsafe.} = ## \
+  ## insert into table saync
+
+  self.insert(table)
 
 
 proc update*[T: PostgreSql|MySql|SqLite, T2: ref object](
@@ -413,6 +596,16 @@ proc update*[T: PostgreSql|MySql|SqLite, T2: ref object](
   session.execQueryAffectedRows(updateRow)
 
 
+proc updateAsync*[T: PostgreSql|MySql|SqLite, T2: ref object](
+    session: T,
+    table: T2,
+    condition: SqlBuilder = nil
+  ): Future[BiggestInt] {.async gcsafe.} = ## \
+  ## update database async
+
+  session.updateAsync(table, condition)
+
+
 proc update*[T: ref object](
     self: Katabase,
     table: T,
@@ -423,6 +616,16 @@ proc update*[T: ref object](
   let conn = self.open
   result = conn.update(table, condition)
   conn.close
+
+
+proc updateAsync*[T: ref object](
+    self: Katabase,
+    table: T,
+    condition: SqlBuilder = nil
+  ): Future[BiggestInt] {.async gcsafe.} = ## \
+  ## update database async
+
+  self.update(table, condition)
 
 
 proc update*[T: ref object](
@@ -440,6 +643,16 @@ proc update*[T: ref object](
     conn.transactionCommit
   except CatchableError: conn.transactionRollback
   conn.close
+
+
+proc updateAsync*[T: ref object](
+    self: Katabase,
+    table: openArray[T],
+    condition: SqlBuilder = nil
+  ): Future[BiggestInt] {.async gcsafe.} = ## \
+  ## update database
+
+  self.update(table, condition)
 
 
 proc select*[T: PostgreSql|MySql|SqLite, T2: ref object](
@@ -460,6 +673,16 @@ proc select*[T: PostgreSql|MySql|SqLite, T2: ref object](
     to(T2)
 
 
+proc selectAsync*[T: PostgreSql|MySql|SqLite, T2: ref object](
+    session: T,
+    table: T2,
+    condition: SqlBuilder = nil
+  ): Future[seq[T2]] {.async gcsafe.} = ## \
+  ## select from database async
+
+  session.select(table, condition)
+
+
 proc select*[T: ref object](
     self: Katabase,
     table: T,
@@ -470,6 +693,16 @@ proc select*[T: ref object](
   let conn = self.open
   result = conn.select(table, condition)
   conn.close
+
+
+proc selectAsync*[T: ref object](
+    self: Katabase,
+    table: T,
+    condition: SqlBuilder = nil,
+  ): Future[seq[T]] {.async gcsafe.} = ## \
+  ## select from database async
+
+  self.select(table, condition)
 
 
 proc selectOne*[T: PostgreSql|MySql|SqLite, T2: ref object](
@@ -492,6 +725,16 @@ proc selectOne*[T: PostgreSql|MySql|SqLite, T2: ref object](
   if queryResult.id.isSome: result = queryResult
 
 
+proc selectOneAsync*[T: PostgreSql|MySql|SqLite, T2: ref object](
+    session: T,
+    table: T2,
+    condition: SqlBuilder = nil
+  ): Future[T2] {.async gcsafe.} = ## \
+  ## select one from database async
+
+  session.selectOne(table, condition)
+
+
 proc selectOne*[T: ref object](
     self: Katabase,
     table: T,
@@ -502,6 +745,16 @@ proc selectOne*[T: ref object](
   let conn = self.open
   result = conn.selectOne(table, condition)
   conn.close
+
+
+proc selectOneAsync*[T: ref object](
+    self: Katabase,
+    table: T,
+    condition: SqlBuilder = nil
+  ): Future[T] {.async gcsafe.} = ## \
+  ## select one from database async
+
+  self.selectOne(table, condition)
 
 
 proc count*[T: PostgreSql|MySql|SqLite, T2: ref object](
@@ -520,6 +773,16 @@ proc count*[T: PostgreSql|MySql|SqLite, T2: ref object](
   session.queryOneRow(selectRow)[0].parseBiggestInt
 
 
+proc countAsync*[T: PostgreSql|MySql|SqLite, T2: ref object](
+    session: T,
+    table: T2,
+    condition: SqlBuilder = nil
+  ): Future[BiggestInt] {.async gcsafe.} = ## \
+  ## count from database async
+
+  session.count(table, condition)
+
+
 proc count*[T: ref object](
     self: Katabase,
     table: T,
@@ -530,6 +793,16 @@ proc count*[T: ref object](
   let conn = self.Katabase.open
   result = conn.count(table, condition)
   conn.close
+
+
+proc countAsync*[T: ref object](
+    self: Katabase,
+    table: T,
+    condition: SqlBuilder = nil
+  ): Future[BiggestInt] {.async gcsafe.} = ## \
+  ## count from database async
+
+  self.count(table, condition)
 
 
 proc delete*[T: PostgreSql|MySql|SqLite, T2: ref object](
@@ -552,6 +825,16 @@ proc delete*[T: PostgreSql|MySql|SqLite, T2: ref object](
   session.execQueryAffectedRows(deleteRow)
 
 
+proc deleteAsync*[T: PostgreSql|MySql|SqLite, T2: ref object](
+    session: T,
+    table: T2,
+    condition: SqlBuilder = nil
+  ): Future[BiggestInt] {.async gcsafe.} = ## \
+  ## delete from database async
+
+  session.delete(table, condition)
+
+
 proc delete*[T: ref object](
     self: Katabase,
     table: T,
@@ -562,6 +845,16 @@ proc delete*[T: ref object](
   let conn = self.open
   result = conn.delete(table, condition)
   conn.close
+
+
+proc deleteAsync*[T: ref object](
+    self: Katabase,
+    table: T,
+    condition: SqlBuilder = nil
+  ): Future[BiggestInt] {.async gcsafe.} = ## \
+  ## delete from database async
+
+  self.delete(table, condition)
 
 
 proc delete*[T: ref object](
@@ -579,3 +872,13 @@ proc delete*[T: ref object](
     conn.transactionCommit
   except CatchableError: conn.transactionRollback
   conn.close
+
+
+proc deleteAsync*[T: ref object](
+    self: Katabase,
+    table: openArray[T],
+    condition: SqlBuilder = nil
+  ): Future[BiggestInt] {.async gcsafe.} = ## \
+  ## delete from database async
+
+  self.delete(table, condition)
