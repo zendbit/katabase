@@ -27,6 +27,18 @@ then inside katabase repo, run nimble test for testing functionality, you can al
 nimble test
 ```
 
+## Support for asyncdispatch
+Katabase support for asyncdispatch, each procedure with postfix Async indicate the procedure is async, for example:
+
+- createTable() ==> createTableAsync()
+- queryRows() ==> queryRowsAsync()
+- queryOneRow() ==> queryOneRowAsync()
+- select() ==> selectAsync()
+- update() ==> updateAsync()
+- delete() ==> deleteAsync
+- selectOne() ==> selectOneAsync()
+- etc...
+
 ## Create katabase
 ```nim
 let kbase = newKatabase[SqLite]("", "mydb.db", "", "")
@@ -224,6 +236,11 @@ let kbase = newKatabase[SqLite]("", "local.db", "", "")
 ## Users table will created automatically
 ## because it referenced by Posts, Comments and UsersDetails
 ##
+
+##
+## for async use:
+## await.createTableAsync(Posts())
+##
 kbase.createTable(Posts())
 kbase.createTable(Comments())
 kbase.createTable(UsersDetails())
@@ -288,7 +305,7 @@ let query2 = sqlBuild.
     sqlBuild.selectDistinct("usersId").
     table("Posts")
   ).
-  where("AND Users.id = ($#)", 1)
+  where("AND Users.id = ($#)", 1).
   limit(100)
 
 echo query2
