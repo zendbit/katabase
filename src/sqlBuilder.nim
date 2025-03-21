@@ -7,6 +7,7 @@ export common
 type
   SqlBuilder* = ref object of RootObj
     select: seq[string]
+    index: seq[string]
     isSelectDistinct: bool
     table: seq[string]
     where: seq[string]
@@ -72,6 +73,9 @@ proc `$`*(sb: SqlBuilder): string {.gcsafe.} = ## \
   if sb.update.len != 0:
     query.add("UPDATE")
 
+  if sb.index.len != 0:
+    query.add("INDEX")
+
   if sb.table.len != 0:
     if sb.select.len != 0 or sb.isDelete:
       query.add("FROM")
@@ -80,55 +84,67 @@ proc `$`*(sb: SqlBuilder): string {.gcsafe.} = ## \
       query.add("INTO")
 
     if sb.isCreate:
-      query.add("TABLE")
-      query.add("IF NOT EXISTS")
+      if sb.index.len != 0: ## \
+        ## if create index
+        query.add(&"""idx_{sb.table[0]}_{sb.index.join("_")}""")
+        query.add("ON")
+        query.add(sb.table[0])
+        query.add("(")
+        query.add(sb.index.join(", "))
+        query.add(")")
 
-    query.add(sb.table.join(", "))
+      else:
+        query.add("TABLE")
+        query.add("IF NOT EXISTS")
 
-    if sb.isCreate:
-      query.add("(")
-      var createTableProperties: seq[string]
-      if sb.column.len != 0:
-        createTableProperties.add(sb.column.join(", "))
+    if sb.index.len == 0: ## \
+      ## if not create index
+      query.add(sb.table.join(", "))
 
-      if sb.primaryKey.len != 0:
-        var primaryKey: seq[string]
-        primaryKey.add("PRIMARY KEY")
-        primarykey.add("(")
-        primaryKey.add(sb.primaryKey.join(", "))
-        primarykey.add(")")
-        createTableProperties.add(primaryKey.join(" "))
+      if sb.isCreate:
+        query.add("(")
+        var createTableProperties: seq[string]
+        if sb.column.len != 0:
+          createTableProperties.add(sb.column.join(", "))
 
-      if sb.foreignKey.len != 0:
-        for fk, fkRef in sb.foreignKey:
-          var foreignKey: seq[string]
-          foreignKey.add("FOREIGN KEY")
-          foreignKey.add("(")
-          foreignKey.add(fk)
-          foreignKey.add(")")
-          foreignKey.add("REFERENCES")
-          foreignKey.add(fkRef.tableRef)
-          foreignKey.add("(")
-          foreignKey.add(fkRef.columnRef)
-          foreignKey.add(")")
-          if fk in sb.foreignKeyOnUpdate:
-            foreignKey.add("ON UPDATE")
-            foreignKey.add(sb.foreignKeyOnUpdate[fk])
-          if fk in sb.foreignKeyOnDelete:
-            foreignKey.add("ON DELETE")
-            foreignKey.add(sb.foreignKeyOnDelete[fk])
-          createTableProperties.add(foreignKey.join(" "))
+        if sb.primaryKey.len != 0:
+          var primaryKey: seq[string]
+          primaryKey.add("PRIMARY KEY")
+          primarykey.add("(")
+          primaryKey.add(sb.primaryKey.join(", "))
+          primarykey.add(")")
+          createTableProperties.add(primaryKey.join(" "))
 
-      if sb.unique.len != 0:
-        var unique: seq[string]
-        unique.add("UNIQUE")
-        unique.add("(")
-        unique.add(sb.unique.join(", "))
-        unique.add(")")
-        createTableProperties.add(unique.join(" "))
+        if sb.foreignKey.len != 0:
+          for fk, fkRef in sb.foreignKey:
+            var foreignKey: seq[string]
+            foreignKey.add("FOREIGN KEY")
+            foreignKey.add("(")
+            foreignKey.add(fk)
+            foreignKey.add(")")
+            foreignKey.add("REFERENCES")
+            foreignKey.add(fkRef.tableRef)
+            foreignKey.add("(")
+            foreignKey.add(fkRef.columnRef)
+            foreignKey.add(")")
+            if fk in sb.foreignKeyOnUpdate:
+              foreignKey.add("ON UPDATE")
+              foreignKey.add(sb.foreignKeyOnUpdate[fk])
+            if fk in sb.foreignKeyOnDelete:
+              foreignKey.add("ON DELETE")
+              foreignKey.add(sb.foreignKeyOnDelete[fk])
+            createTableProperties.add(foreignKey.join(" "))
 
-      query.add(createTableProperties.join(", "))
-      query.add(")")
+        if sb.unique.len != 0:
+          var unique: seq[string]
+          unique.add("UNIQUE")
+          unique.add("(")
+          unique.add(sb.unique.join(", "))
+          unique.add(")")
+          createTableProperties.add(unique.join(" "))
+
+        query.add(createTableProperties.join(", "))
+        query.add(")")
 
   if sb.insert.len != 0:
     query.add("(")
@@ -293,6 +309,16 @@ proc create*(self: SqlBuilder): SqlBuilder {.gcsafe discardable.} = ## \
   ## create statement
 
   self.isCreate = true
+  self
+
+
+proc index*[T](
+    self: SqlBuilder,
+    column: T
+  ): SqlBuilder {.gcsafe discardable.} = ## \
+  ## create column index
+
+  self.index &= column.toSqlBuilderParam
   self
 
 

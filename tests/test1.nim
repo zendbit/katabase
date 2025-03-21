@@ -125,6 +125,16 @@ test "test katabase functionality":
   kbase.createTable(Comments())
   kbase.createTable(UsersDetails())
 
+  ## test create index
+  echo "== Test create index"
+  let tindex = sqlBuild.
+    create.
+    index(("name", "last_update")).
+    table("tbl_users")
+
+  echo tindex
+  kbase.execQuery(tindex)
+
 
   ## lets try to insert into Users table
   echo "== Test insert"
@@ -173,14 +183,14 @@ test "test katabase functionality":
   ##
   ## lets try to update some field
   ##
-  var user = kbase.selectOne(Users(), sqlBuild.where("Users.name=$# AND Users.is_active=$#", ("Foo", false)))
+  var user = kbase.selectOne(Users(), sqlBuild.where("tbl_users.name=$# AND tbl_users.is_active=$#", ("Foo", false)))
   if not user.isNil:
     user.lastUpdate = some "2025-02-25"
     user.isActive = some false
 
     echo "Update affected row " & $kbase.update(user)
 
-    let user = kbase.selectOne(Users(), sqlBuild.where("Users.name=$#", "Foo"))
+    let user = kbase.selectOne(Users(), sqlBuild.where("tbl_users.name=$#", "Foo"))
     if not user.isNil:
       echo "Modify last update to " & user.lastUpdate.get
       echo "Modify is active to " & $user.isActive.get
@@ -207,7 +217,7 @@ test "test katabase functionality":
   ##
   ## lets try to delete user
   ##
-  user = kbase.selectOne(Users(), sqlBuild.where("Users.name=$#", "Foo"))
+  user = kbase.selectOne(Users(), sqlBuild.where("tbl_users.name=$#", "Foo"))
   if not user.isNil:
     if kbase.delete(user) != 0:
       echo "User " & user.name.get & " deleted."
@@ -237,8 +247,8 @@ test "test katabase functionality":
   if kbase.queryRows(
       sqlBuild.
       select(("id", "name", "last_update", "is_active")).
-      table("Users").
-      where("Users.name NOT IN ($#)", @["Foo", "Bar", "Blah"].join(", "))
+      table("tbl_users").
+      where("tbl_users.name NOT IN ($#)", @["Foo", "Bar", "Blah"].join(", "))
     ).len == 0:
     ## add "Foo Bar" user into Users
 
@@ -248,7 +258,7 @@ test "test katabase functionality":
         sqlBuild.
           insert(("name", "last_update", "is_active")).
           value(("Foo", "2025-01-30", true)).
-          table("Users")
+          table("tbl_users")
       )
 
     ##
@@ -270,13 +280,13 @@ test "test katabase functionality":
               ("Blah", "2025-01-30", true)
             ]
           ).
-          table("Users")
+          table("tbl_users")
       )
 
   var usersRaw = kbase.queryRows(
       sqlBuild.
       select(("id", "name", "last_update", "is_active")).
-      table("Users")
+      table("tbl_users")
     )
 
   for user in usersRaw:
@@ -320,8 +330,8 @@ test "test katabase functionality":
   var userRaw = kbase.queryOneRow(
       sqlBuild.
       select(("id", "name")).
-      table("Users").
-      where("Users.name=$#", "Blah")
+      table("tbl_users").
+      where("tbl_users.name=$#", "Blah")
     )
 
   ## check if result query id not empty
@@ -344,14 +354,14 @@ test "test katabase functionality":
       sqlBuild.
       select(
         (
-          "Users.id AS userId",
-          "Users.name AS userName",
+          "tbl_users.id AS userId",
+          "tbl_users.name AS userName",
           "post",
           "Posts.id AS postId"
         )
       ).
-      table("Users").
-      innerJoin("Posts", "Users.id = Posts.usersId")
+      table("tbl_users").
+      innerJoin("Posts", "tbl_users.id = Posts.usersId")
     )
 
   for user in usersRaw:
@@ -370,14 +380,14 @@ test "test katabase functionality":
       sqlBuild.
       select(
         (
-          "Users.id AS userId",
-          "Users.name AS userName",
+          "tbl_users.id AS userId",
+          "tbl_users.name AS userName",
           "post",
           "Posts.id AS postId"
         )
       ).
-      table("Users").
-      innerJoin("Posts", "Users.id = Posts.usersId")
+      table("tbl_users").
+      innerJoin("Posts", "tbl_users.id = Posts.usersId")
     )
 
   var updatedRow = kbase.execQueryAffectedRows(
@@ -394,14 +404,14 @@ test "test katabase functionality":
       sqlBuild.
       select(
         (
-          "Users.id AS userId",
-          "Users.name AS userName",
+          "tbl_users.id AS userId",
+          "tbl_users.name AS userName",
           "post",
           "Posts.id AS postId"
         )
       ).
-      table("Users").
-      innerJoin("Posts", "Users.id = Posts.usersId").
+      table("tbl_users").
+      innerJoin("Posts", "tbl_users.id = Posts.usersId").
       orderByAsc("userId")
     )
 
@@ -417,7 +427,7 @@ test "test katabase functionality":
   ## try with subquery
   ##
 
-  var posts = waitFor kbase.queryRows(
+  var posts = kbase.queryRows(
       sqlBuild.
       select(("post", "usersId")).
       table("Posts").
@@ -425,8 +435,8 @@ test "test katabase functionality":
         "Posts.usersId IN ($#)" %
         $sqlBuild.
         select("id").
-        table("Users").
-        where("Users.name=$#", "Blah")
+        table("tbl_users").
+        where("tbl_users.name=$#", "Blah")
       )
     )
 
@@ -435,5 +445,6 @@ test "test katabase functionality":
     echo "Post id " & $post["id"].getBiggestInt.val
     echo "Post content " & post["post"]
 
-## remove test database
-"test.db".Path.removeFile
+  ## remove test database
+  "test.db".Path.removeFile
+

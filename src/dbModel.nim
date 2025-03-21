@@ -106,7 +106,6 @@ proc toColumnValue*(
 
 proc toSql*(self: DbTableModel): SqlBuilder {.gcsafe.} = ## \
   ## string representation of db table
-
   var sqlb = sqlBuild.
     create.
     table(self.validName)
@@ -177,6 +176,7 @@ proc toDbTable*[T: ref object](
   if t.hasCustomPragma(dbTable):
     result = DbTableModel(dialect: dialect)
     result.name = $ type T
+    result.alias = t.getCustomPragmaVal(dbTable)
 
     for k, v in t[].fieldPairs:
       when not v.hasCustomPragma(dbIgnore):
