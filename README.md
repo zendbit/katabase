@@ -64,9 +64,10 @@ import katabase
 
 type
   Users* {.dbTable.} = ref object of DbModel
-    name*: Option[string]
+    name*: Option[string],
+    uuid*{.dbUUID.}: Option[string]
     lastUpdate* {.
-      dbColumnType: "TIMESTAMP"
+      dbColumnType: "TIMESTAMP",
       dbColumnName: "last_update"
     .}: Option[string]
     isActive* {.dbColumnName: "is_active".}: Option[bool]
@@ -97,6 +98,25 @@ type
   ##  we can pass table name to dbTable pragma
   ##  {.dbTable: "tbl_users".}
   ##
+```
+
+***{.dbUUID.}***: database table column uuid type, for MySql and PostgreSql will
+use UUID type but on SqLite will use TEXT type. To generate using nim oids just
+use $genOid() when inserting data.
+```nim
+type
+  Users* {.dbTable.} = ref object of DbModel ## \
+  ##
+  ##  we can pass table name to dbTable pragma
+  ##  {.dbTable: "tbl_users".}
+  ##
+    firstname* {.
+      dbColumnLength: 20
+    .}: Option[string]
+    lastname* {.
+      dbColumnLength: 20
+    .}: Option[string]
+    uuid* {.dbUUID.}: Option[string]
 ```
 
 ***{.dbColumnName.}***: database table column identifier and name, we can pass custom name to column field. if pragma not applied then it will use field name instead
@@ -204,6 +224,7 @@ import katabase
 type
   Users* {.dbTable.} = ref object of DbModel
     name*: Option[string]
+    uuid* {.dbUUID.}: Option[string]
     lastUpdate* {.
       dbColumnType: "TIMESTAMP"
       dbColumnName: "last_update" ## for simulate column name mapping
@@ -340,6 +361,7 @@ import katabase
 type
   Users* {.dbTable.} = ref object of DbModel
     name*: Option[string]
+    uuid* {.dbUUID.}: Option[string]
     lastUpdate* {.
       dbColumnType: "TIMESTAMP"
       dbColumnName: "last_update" ## for simulate column name mapping
@@ -371,6 +393,7 @@ kbase.createTable(Posts())
 let userId = kbase.insert(
   Users(
     name: some "Foo",
+    uuid: some $genOid(),
     lastUpdate: some "2025-01-30",
     isActive: some true
   )
@@ -386,16 +409,19 @@ let usersInserted = kbase.insert(
   @[
     Users(
       name: some "Foo",
+      uuid: some $genOid(),
       lastUpdate: some "2025-01-30",
       isActive: some true
     ),
     Users(
       name: some "Bar",
+      uuid: some $genOid(),
       lastUpdate: some "2025-01-30",
       isActive: some true
     ),
     Users(
       name: some "John",
+      uuid: some $genOid(),
       lastUpdate: some "2025-01-30",
       isActive: some true
     )
@@ -412,8 +438,8 @@ else:
 ```nim
 let userId = kbase.insertRow(
   sqlBuild.
-  insert(("name", "last_update", "is_active")).
-  value(("Foo", "2025-01-30", true)).
+  insert(("name", "uuid", "last_update", "is_active")).
+  value(("Foo", $genOid(), "2025-01-30", true)).
   table("Users")
 )
 
@@ -425,12 +451,12 @@ else:
 ## insert multiple value
 let insertedId = kbase.execQueryAffectedRows(
   sqlBuild.
-  insert(("name", "last_update", "is_active")).
+  insert(("name", "uuid", "last_update", "is_active")).
   value(
     @[
-      ("Foo", "2025-01-30", true),
-      ("Bar", "2025-01-30", true),
-      ("John", "2025-01-30", true)
+      ("Foo", $genOid(), "2025-01-30", true),
+      ("Bar", $genOid(), "2025-01-30", true),
+      ("John", $genOid(), "2025-01-30", true)
     ]
   ).
   table("Users")
@@ -450,6 +476,7 @@ let user = kbase.selectOne(Users(), sqlBuild.where("Users.name=$#", "Foo"))
 
 if not user.isNil:
   echo "User name is " & user.name.get
+  echo "User uuid is " & user.uuid.get
   echo "User is active " & $user.isActive.get
   echo "User last update " & user.lastUpdate.get
 
@@ -458,6 +485,7 @@ let users = kbase.select(Users(), sqlBuild.where("Users.name=$# OR Users.name=$#
 
 for user in users:
   echo "User name is " & user.name.get
+  echo "User uuid is " & user.uuid.get
   echo "User is active " & $user.isActive.get
   echo "User last update " & user.lastUpdate.get
 ```
@@ -468,7 +496,7 @@ for user in users:
 ## $# is for string subtitution with parameter
 let user = kbase.queryOneRow(
     sqlBuild.
-    select(("name", "last_update", "is_active")).
+    select(("name", "uuid", "last_update", "is_active")).
     table("Users").
     where("Users.name=$#", "Foo")
   )
@@ -479,19 +507,21 @@ let user = kbase.queryOneRow(
 ##
 if not user["id"].isNullOrEmpty:
   echo "User name is " & user["name"]
+  echo "User uuid is " & user["uuid"]
   echo "User is active " & $user["is_active"].getBiggestInt.val
   echo "User last update " & user["last_update"].getBool.val
 
 ## select multiple user
 let users = kbase.select(
     sqlBuild.
-    select(("name", "last_update", "is_active")).
+    select(("name", "uuid", "last_update", "is_active")).
     table("Users").
     where("Users.name IN ($#)" % @["Foo", "Bar"].join(","))
   )
 
 for user in users:
   echo "User name is " & user["name"]
+  echo "User uuid is " & user["uuid"]
   echo "User is active " & $user["is_active"].getBiggestInt.val
   echo "User last update " & user["last_update"].getBool.val
 ```
@@ -591,7 +621,7 @@ if userDeleted != 0:
 ```nim
 var userRaw = kbase.queryOneRow(
     sqlBuild.
-    select(("id", "name")).
+    select(("id", "name", "uuid")).
     table("Users").
     where("Users.name=$#", "Foo")
   )
@@ -618,6 +648,7 @@ var usersRaw = kbase.queryRows(
       (
         "Users.id AS userId",
         "Users.name AS userName",
+        "Users.uuid AS userUUID",
         "post",
         "Posts.id AS postId"
       )
@@ -630,6 +661,7 @@ for user in usersRaw:
   echo "========="
   echo "User id " & $user["userId"].getBiggestInt.val
   echo "User name " & user["userName"]
+  echo "User uuid " & user["userUUID"]
   echo "User post " & user["post"]
   echo "Post id " & $user["postId"].getBiggestInt.val
 

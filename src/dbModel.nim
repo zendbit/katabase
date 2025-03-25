@@ -3,11 +3,13 @@ import std/[
     typetraits,
     times,
     options,
-    parseutils
+    parseutils,
+    oids
   ]
 export
   times,
-  options
+  options,
+  oids
 
 import sqlBuilder
 export sqlBuilder
@@ -24,6 +26,7 @@ template dbUnique* {.pragma.}
 template dbReference*(t: typedesc) {.pragma.}
 template dbCompositeUnique* {.pragma.}
 template dbIgnore* {.pragma.}
+template dbUUID* {.pragma.}
 
 
 type
@@ -140,7 +143,12 @@ proc toSql*(self: DbTableModel): SqlBuilder {.gcsafe.} = ## \
       else:
         columnType = "TEXT"
 
-    if column.validName == "id" and column.isAutoIncrement:
+    elif column.dialect == DbSqLite and columnType == "UUID": ## \
+      ## if column type is UUID then change to TEXT for SQLITE
+      columnType = "TEXT"
+
+    if column.validName == "id" and column.isAutoIncrement: ## \
+      ## if column name is id then make it auto increment
       isIdAutoIncrement = true
 
     sqlb.column(
@@ -157,6 +165,9 @@ proc toSql*(self: DbTableModel): SqlBuilder {.gcsafe.} = ## \
         (column.reference.validName, "id"),
         "CASCADE",
         "CASCADE")
+
+    if column.isUnique:
+      sqlb.unique(column.validName)
 
   if self.compositeUnique.len != 0:
     sqlb.unique(self.compositeUnique.join(", "))
@@ -205,6 +216,10 @@ proc toDbTable*[T: ref object](
           when v.hasCustomPragma(dbReference):
             column.reference = v.getCustomPragmaVal(dbReference)().
               toDbTable(dialect)
+
+        when v.hasCustomPragma(dbModel.dbUUID):
+          column.columnType = "UUID"
+          column.isUnique = true
 
         column.typeOf = $ type v
         column.value = %v

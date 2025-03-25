@@ -7,8 +7,9 @@ export common
 type
   SqlBuilder* = ref object of RootObj
     select: seq[string]
-    index: seq[string]
     isSelectDistinct: bool
+    index: seq[string]
+    isUniqueIndex: bool
     table: seq[string]
     where: seq[string]
     groupBy: seq[string]
@@ -74,6 +75,8 @@ proc `$`*(sb: SqlBuilder): string {.gcsafe.} = ## \
     query.add("UPDATE")
 
   if sb.index.len != 0:
+    if sb.isUniqueIndex:
+      query.add("UNIQUE")
     query.add("INDEX")
 
   if sb.table.len != 0:
@@ -319,6 +322,17 @@ proc index*[T](
   ## create column index
 
   self.index &= column.toSqlBuilderParam
+  self
+
+
+proc uniqueIndex*[T](
+    self: SqlBuilder,
+    column: T
+  ): SqlBuilder {.gcsafe discardable.} = ## \
+  ## create column index
+
+  self.index(column)
+  self.isUniqueIndex = true
   self
 
 

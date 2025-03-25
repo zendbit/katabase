@@ -40,6 +40,7 @@ type
     ## as table name
     ##
     name*: Option[string]
+    uuid* {.dbUUID.}: Option[string]
     lastUpdate* {.
       dbColumnType: "TIMESTAMP"
       dbColumnName: "last_update"
@@ -142,6 +143,7 @@ test "test katabase functionality":
   let userId = kbase.insert(
       Users(
         name: some "Foo",
+        uuid: some $genOid(),
         lastUpdate: some "2025-01-30",
         isActive: some true
       )
@@ -158,11 +160,13 @@ test "test katabase functionality":
       [
         Users(
           name: some "Bar",
+          uuid: some $genOid(),
           lastUpdate: some "2025-01-30",
           isActive: some true
         ),
         Users(
           name: some "Blah",
+          uuid: some $genOid(),
           lastUpdate: some "2025-01-30",
           isActive: some true
         )
@@ -256,8 +260,8 @@ test "test katabase functionality":
     echo "== Test insert raw single"
     let userId = kbase.insertRow(
         sqlBuild.
-          insert(("name", "last_update", "is_active")).
-          value(("Foo", "2025-01-30", true)).
+          insert(("name", "uuid", "last_update", "is_active")).
+          value(("Foo", $genOid(), "2025-01-30", true)).
           table("tbl_users")
       )
 
@@ -273,11 +277,11 @@ test "test katabase functionality":
     echo "== Test insert raw multiple"
     var numUserInserted = kbase.execQueryAffectedRows(
         sqlBuild.
-          insert(("name", "last_update", "is_active")).
+          insert(("name", "uuid", "last_update", "is_active")).
           value(
             @[
-              ("Bar", "2025-01-30", true),
-              ("Blah", "2025-01-30", true)
+              ("Bar", $genOid(), "2025-01-30", true),
+              ("Blah", $genOid(), "2025-01-30", true)
             ]
           ).
           table("tbl_users")
@@ -285,7 +289,7 @@ test "test katabase functionality":
 
   var usersRaw = kbase.queryRows(
       sqlBuild.
-      select(("id", "name", "last_update", "is_active")).
+      select(("id", "uuid", "name", "last_update", "is_active")).
       table("tbl_users")
     )
 
@@ -293,6 +297,7 @@ test "test katabase functionality":
     echo "======="
     echo "User name " & user["name"]
     echo "User id " & $user["id"].getInt.val
+    echo "User uuid " & user["uuid"]
     echo "User last update " & user["last_update"]
     echo "User is active " & user["is_active"]
 
