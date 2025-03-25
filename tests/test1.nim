@@ -40,7 +40,10 @@ type
     ## as table name
     ##
     name*: Option[string]
-    uuid* {.dbUUID.}: Option[string]
+    uuid* {.
+      dbUUID
+      dbUnique
+    .}: Option[string]
     lastUpdate* {.
       dbColumnType: "TIMESTAMP"
       dbColumnName: "last_update"

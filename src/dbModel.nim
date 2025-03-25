@@ -219,7 +219,6 @@ proc toDbTable*[T: ref object](
 
         when v.hasCustomPragma(dbModel.dbUUID):
           column.columnType = "UUID"
-          column.isUnique = true
 
         column.typeOf = $ type v
         column.value = %v

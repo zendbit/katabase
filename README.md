@@ -65,7 +65,10 @@ import katabase
 type
   Users* {.dbTable.} = ref object of DbModel
     name*: Option[string],
-    uuid*{.dbUUID.}: Option[string]
+    uuid*{.
+      dbUUID
+      dbUnique
+    .}: Option[string]
     lastUpdate* {.
       dbColumnType: "TIMESTAMP",
       dbColumnName: "last_update"
@@ -116,7 +119,10 @@ type
     lastname* {.
       dbColumnLength: 20
     .}: Option[string]
-    uuid* {.dbUUID.}: Option[string]
+    uuid* {.
+      dbUUID
+      dbUnique
+    .}: Option[string]
 ```
 
 ***{.dbColumnName.}***: database table column identifier and name, we can pass custom name to column field. if pragma not applied then it will use field name instead
@@ -224,7 +230,10 @@ import katabase
 type
   Users* {.dbTable.} = ref object of DbModel
     name*: Option[string]
-    uuid* {.dbUUID.}: Option[string]
+    uuid* {.
+      dbUUID
+      dbUnique
+    .}: Option[string]
     lastUpdate* {.
       dbColumnType: "TIMESTAMP"
       dbColumnName: "last_update" ## for simulate column name mapping
@@ -361,7 +370,10 @@ import katabase
 type
   Users* {.dbTable.} = ref object of DbModel
     name*: Option[string]
-    uuid* {.dbUUID.}: Option[string]
+    uuid* {.
+      dbUUID
+      dbUnique
+    .}: Option[string]
     lastUpdate* {.
       dbColumnType: "TIMESTAMP"
       dbColumnName: "last_update" ## for simulate column name mapping
