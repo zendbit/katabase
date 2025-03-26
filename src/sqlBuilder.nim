@@ -78,6 +78,7 @@ proc `$`*(sb: SqlBuilder): string {.gcsafe.} = ## \
     if sb.isUniqueIndex:
       query.add("UNIQUE")
     query.add("INDEX")
+    query.add("IF NOT EXISTS")
 
   if sb.table.len != 0:
     if sb.select.len != 0 or sb.isDelete:

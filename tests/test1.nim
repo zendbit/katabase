@@ -131,9 +131,17 @@ test "test katabase functionality":
 
   ## test create index
   echo "== Test create index"
-  let tindex = sqlBuild.
+  var tindex = sqlBuild.
     create.
-    index(("name", "last_update")).
+    uniqueIndex(("name", "last_update")).
+    table("tbl_users")
+
+  echo tindex
+  kbase.execQuery(tindex)
+
+  tindex = sqlBuild.
+    create.
+    index(("name", "uuid")).
     table("tbl_users")
 
   echo tindex
