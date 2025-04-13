@@ -21,7 +21,7 @@ template dbPrimaryKey* {.pragma.}
 template dbNullable* {.pragma.}
 template dbAutoIncrement* {.pragma.}
 template dbColumnType*(columnType: string) {.pragma.}
-template dbColumnLength*{length: BiggestInt} {.pragma.}
+template dbColumnLength*(length: BiggestInt) {.pragma.}
 template dbUnique* {.pragma.}
 template dbReference*(t: typedesc) {.pragma.}
 template dbCompositeUnique* {.pragma.}

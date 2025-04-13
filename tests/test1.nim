@@ -94,7 +94,10 @@ type
 
   UsersDetails* {.dbTable.} = ref object of DbModel
     usersId* {.dbReference: Users.}: Option[BiggestInt]
-    address*: Option[string]
+    address* {.
+      dbColumnLength: 254
+      dbColumnType: "VARCHAR"
+    .}: Option[string]
 
 
 test "test katabase functionality":
