@@ -282,7 +282,7 @@ Katabase comes with handy tool for doing query operation.
 let query1 = sqlBuild.
   select(("id", "name")).
   table("Users").
-  where("Users.id=$#", 1)
+  where("Users.id=?", 1)
 
 ##
 ## sql lexical will handle by katabase
@@ -290,11 +290,11 @@ let query1 = sqlBuild.
 
 let query2 = sqlBuild.
   table("Users").
-  where("Users.id=$#", 1).
+  where("Users.id=?", 1).
   select(("id", "name"))
 
 let query3 = sqlBuild.
-  where("Users.id=$#", 1).
+  where("Users.id=?", 1).
   table("Users").
   select(("id", "name"))
 
@@ -331,11 +331,11 @@ let query2 = sqlBuild.
   ).
   table(("Users", "Posts")).
   where(
-    "Users.id IN ($#)" %
+    "Users.id IN (?)" %
     sqlBuild.selectDistinct("usersId").
     table("Posts")
   ).
-  where("AND Users.id = ($#)", 1).
+  where("AND Users.id = (?)", 1).
   limit(100)
 
 echo query2
@@ -483,8 +483,8 @@ else:
 ## Select using ORM
 ```nim
 ## select single row
-## $# is for string subtitution with parameter
-let user = kbase.selectOne(Users(), sqlBuild.where("Users.name=$#", "Foo"))
+## ? is for string subtitution with parameter
+let user = kbase.selectOne(Users(), sqlBuild.where("Users.name=?", "Foo"))
 
 if not user.isNil:
   echo "User name is " & user.name.get
@@ -493,7 +493,7 @@ if not user.isNil:
   echo "User last update " & user.lastUpdate.get
 
 ## select multiple user
-let users = kbase.select(Users(), sqlBuild.where("Users.name=$# OR Users.name=$#", ("Foo", "Bar")))
+let users = kbase.select(Users(), sqlBuild.where("Users.name=? OR Users.name=?", ("Foo", "Bar")))
 
 for user in users:
   echo "User name is " & user.name.get
@@ -505,12 +505,12 @@ for user in users:
 ## Select using SqlBuilder
 ```nim
 ## select single row
-## $# is for string subtitution with parameter
+## ? is for string subtitution with parameter
 let user = kbase.queryOneRow(
     sqlBuild.
     select(("name", "uuid", "last_update", "is_active")).
     table("Users").
-    where("Users.name=$#", "Foo")
+    where("Users.name=?", "Foo")
   )
 
 ##
@@ -528,7 +528,7 @@ let users = kbase.select(
     sqlBuild.
     select(("name", "uuid", "last_update", "is_active")).
     table("Users").
-    where("Users.name IN ($#)" % @["Foo", "Bar"].join(","))
+    where("Users.name IN (?)" % @["Foo", "Bar"].join(","))
   )
 
 for user in users:
@@ -559,14 +559,14 @@ available fields conversion in raw query using SqlBuilder:
 ## Update using ORM
 ```nim
 echo "Test update single record"
-var user = kbase.selectOne(Users(), sqlBuild.where("Users.name=$# AND Users.is_active=$#", ("Foo", false)))
+var user = kbase.selectOne(Users(), sqlBuild.where("Users.name=? AND Users.is_active=?", ("Foo", false)))
 if not user.isNil:
   user.lastUpdate = some "2025-02-25"
   user.isActive = some false
 
   echo "Update affected row " & $kbase.update(user)
 
-  let user = kbase.selectOne(Users(), sqlBuild.where("Users.name=$#", "Foo"))
+  let user = kbase.selectOne(Users(), sqlBuild.where("Users.name=?", "Foo"))
   if not user.isNil:
     echo "Modify last update to " & user.lastUpdate.get
     echo "Modify is active to " & $user.isActive.get
@@ -593,7 +593,7 @@ let updatedRow = kbase.execQueryAffectedRows(
     update(("is_active", "last_update")).
     value((false, "2025-02-20")).
     table("Users").
-    where("Users.is_active = $# AND Users.last_update <> '$#'", (true, "2025-02-20"))
+    where("Users.is_active = ? AND Users.last_update <> '?'", (true, "2025-02-20"))
   )
 
 echo $updatedRow & " record modified."
@@ -602,13 +602,13 @@ echo $updatedRow & " record modified."
 ## Delete using ORM
 ```nim
 echo "Test single delete"
-let user = kbase.selectOne(Users(), sqlBuild.where("Users.name=$#", "Foo"))
+let user = kbase.selectOne(Users(), sqlBuild.where("Users.name=?", "Foo"))
 if not user.isNil and kbase.delete(user) != 0:
   echo "User " & user.name.get & " deleted."
 
 echo ""
 echo "Test multiple delete"
-let users = kbase.select(Users(), sqlBuild.where("Users.name IN ($#)", @["Foo", "Bar"].join(", ")))
+let users = kbase.select(Users(), sqlBuild.where("Users.name IN (?)", @["Foo", "Bar"].join(", ")))
 let userDeleted = kbase.delete(users)
 
 if userDeleted != 0:
@@ -622,7 +622,7 @@ let userDeleted = kbase.execQueryAffectedRows(
     sqlBuild.
     delete.
     table("Users").
-    where("Users.name IN ($#)", @["Foo", "Bar"].join(", "))
+    where("Users.name IN (?)", @["Foo", "Bar"].join(", "))
   )
 
 if userDeleted != 0:
@@ -635,7 +635,7 @@ var userRaw = kbase.queryOneRow(
     sqlBuild.
     select(("id", "name", "uuid")).
     table("Users").
-    where("Users.name=$#", "Foo")
+    where("Users.name=?", "Foo")
   )
 
 ## check if result query id not empty
@@ -701,7 +701,7 @@ var updatedRow = kbase.execQueryAffectedRows(
     update("post").
     value("practice every day").
     table("Posts").
-    where("Posts.id = $#", userRaw["postId"].getBiggestInt.val)
+    where("Posts.id = ?", userRaw["postId"].getBiggestInt.val)
   )
 
 echo $updatedRow & " record modified."
@@ -738,11 +738,11 @@ var posts = kbase.queryRows(
     select(("post", "usersId")).
     table("Posts").
     where(
-      "Posts.usersId IN ($#)" %
+      "Posts.usersId IN (?)" %
       $sqlBuild.
       select("id").
       table("Users").
-      where("Users.name=$#", "Blah")
+      where("Users.name=?", "Blah")
     )
   )
 
