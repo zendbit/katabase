@@ -331,7 +331,7 @@ let query2 = sqlBuild.
   ).
   table(("Users", "Posts")).
   where(
-    "Users.id IN (?)" %
+    "Users.id IN (?)",
     sqlBuild.selectDistinct("usersId").
     table("Posts")
   ).
@@ -528,7 +528,7 @@ let users = kbase.select(
     sqlBuild.
     select(("name", "uuid", "last_update", "is_active")).
     table("Users").
-    where("Users.name IN (?)" % @["Foo", "Bar"].join(","))
+    where("Users.name IN (?)", @["Foo", "Bar"].join(","))
   )
 
 for user in users:
@@ -738,7 +738,7 @@ var posts = kbase.queryRows(
     select(("post", "usersId")).
     table("Posts").
     where(
-      "Posts.usersId IN (?)" %
+      "Posts.usersId IN (?)",
       $sqlBuild.
       select("id").
       table("Users").
