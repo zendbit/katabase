@@ -201,14 +201,14 @@ test "test katabase functionality":
   ##
   ## lets try to update some field
   ##
-  var user = kbase.selectOne(Users(), sqlBuild.where("tbl_users.name=$# AND tbl_users.is_active=$#", ("Foo", false)))
+  var user = kbase.selectOne(Users(), sqlBuild.where("tbl_users.name=? AND tbl_users.is_active=?", ("Foo", false)))
   if not user.isNil:
     user.lastUpdate = some "2025-02-25"
     user.isActive = some false
 
     echo "Update affected row " & $kbase.update(user)
 
-    let user = kbase.selectOne(Users(), sqlBuild.where("tbl_users.name=$#", "Foo"))
+    let user = kbase.selectOne(Users(), sqlBuild.where("tbl_users.name=?", "Foo"))
     if not user.isNil:
       echo "Modify last update to " & user.lastUpdate.get
       echo "Modify is active to " & $user.isActive.get
@@ -235,7 +235,7 @@ test "test katabase functionality":
   ##
   ## lets try to delete user
   ##
-  user = kbase.selectOne(Users(), sqlBuild.where("tbl_users.name=$#", "Foo"))
+  user = kbase.selectOne(Users(), sqlBuild.where("tbl_users.name=?", "Foo"))
   if not user.isNil:
     if kbase.delete(user) != 0:
       echo "User " & user.name.get & " deleted."
@@ -266,7 +266,7 @@ test "test katabase functionality":
       sqlBuild.
       select(("id", "name", "last_update", "is_active")).
       table("tbl_users").
-      where("tbl_users.name NOT IN ($#)", @["Foo", "Bar", "Blah"].join(", "))
+      where("tbl_users.name NOT IN (?)", @["Foo", "Bar", "Blah"].join(", "))
     ).len == 0:
     ## add "Foo Bar" user into Users
 
@@ -350,7 +350,7 @@ test "test katabase functionality":
       sqlBuild.
       select(("id", "name")).
       table("tbl_users").
-      where("tbl_users.name=$#", "Blah")
+      where("tbl_users.name=?", "Blah")
     )
 
   ## check if result query id not empty
@@ -414,7 +414,7 @@ test "test katabase functionality":
       update("post").
       value("practice every day").
       table("Posts").
-      where("Posts.id = $#", userRaw["postId"].getBiggestInt.val)
+      where("Posts.id = ?", userRaw["postId"].getBiggestInt.val)
     )
 
   echo $updatedRow & " record modified."
@@ -451,11 +451,11 @@ test "test katabase functionality":
       select(("post", "usersId")).
       table("Posts").
       where(
-        "Posts.usersId IN ($#)" %
+        "Posts.usersId IN (?)",
         $sqlBuild.
         select("id").
         table("tbl_users").
-        where("tbl_users.name=$#", "Blah")
+        where("tbl_users.name=?", "Blah")
       )
     )
 

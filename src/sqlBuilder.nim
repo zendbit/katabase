@@ -53,6 +53,12 @@ proc newSqlBuilder*(): SqlBuilder {.gcsafe.} = ## \
   )
 
 
+proc escapeQuery(query: string): string {.gcsafe.} = ## \
+  ## escape query
+
+  query.replace("??", "$??").replace("?", "$#").replace("$??", "?")
+
+
 proc `$`*(sb: SqlBuilder): string {.gcsafe.} = ## \
   ## sql builder to string
 
@@ -446,7 +452,7 @@ proc where*[T](
   ): SqlBuilder {.gcsafe discardable.} = ## \
   ## where
 
-  where(self, condition % params.toSqlBuilderValue[0])
+  where(self, condition.escapeQuery % params.toSqlBuilderValue[0])
 
 
 proc groupBy*[T](
@@ -476,7 +482,7 @@ proc having*[T](
   ): SqlBuilder {.gcsafe discardable.} = ## \
   ## having
 
-  having(self, condition % params.toSqlBuilderValue[0])
+  having(self, condition.escapeQuery % params.toSqlBuilderValue[0])
 
 
 proc orderBy*[T](
