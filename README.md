@@ -186,16 +186,62 @@ type
     .}: Option[string]
 ```
 
-***{.dbCompositeUnique.}***: treat column field as composite unique with other field
+***{.dbUnique: @[...].}***: treat column field to unique field
+
+we can create group of multiple column as unique using sequence as identifier
+
+```nim
+type
+  SomeType* {.dbTable.} = ref object of DbModel
+    field1* {.
+      dbUnique: @["field1_field2", "field1_field2_field3"]
+    .}: Option[string]
+    field2* {.
+      dbUnique: @["field1_field2", "field1_field2_field3"]
+    .}: Option[string]
+    field3* {.
+      dbUnique: @["field3", "field1_field2_field3"]
+    .}: Option[string]
+
+## field1_field2 will group and combine field1 and field2 as unique
+## field3 will only field3 unique
+## field1_field2_field3 will group and combine field1, field2, and field3 as unique
+```
+
+***{.dbIndex.}***: create column indexing
+***{.dbUniqueIndex.}***: create unique column indexing
 ```nim
 type
   SomeType* {.dbTable.} = ref object of DbModel
     someField* {.
-      dbCompositeUnique ## will unique composite with otherSomeField
+      dbColumnType: "VARCHAR" ## set type to VARCHAR
+      dbColumnLength: 100 ## set field length to 100
+      dbNullable ## set default to NULL
+      dbIndex ## create column indexing, use dbUniqueIndex for unique indexing
     .}: Option[string]
-    otherSomeField* {.
-      dbCompositeUnique ## will unique composite with someField
+```
+
+***{.dbIndex: @[...].}***: group column indexing
+***{.dbUniqueIndex: @[...].}***: group unique column indexing
+
+we can create group of multiple column indexing using sequence as identifier
+
+```nim
+type
+  SomeType* {.dbTable.} = ref object of DbModel
+    field1* {.
+      dbIndex: @["field1", "field1_field2", "field1_field2_field3"]
     .}: Option[string]
+    field2* {.
+      dbIndex: @["field1_field2", "field1_field2_field3"]
+    .}: Option[string]
+    field3* {.
+      dbIndex: @["field1_field2_field3"]
+    .}: Option[string]
+
+## field1 will only create field1 column indexing
+## field1_field2 will group field1 and field2
+## field1_field2_field3 will group and combine field1, field2, and field3
 ```
 
 ***{.dbIgnore.}***: this is special pragma, field with this pragma will ignored form database table column creation and from database query

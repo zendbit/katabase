@@ -6,6 +6,7 @@ export common
 
 type
   SqlBuilder* = ref object of RootObj
+    isDrop: bool
     select: seq[string]
     isSelectDistinct: bool
     index: seq[string]
@@ -77,10 +78,13 @@ proc `$`*(sb: SqlBuilder): string {.gcsafe.} = ## \
   if sb.isDelete:
     query.add("DELETE")
 
+  if sb.isDrop:
+    query.add("DROP")
+
   if sb.update.len != 0:
     query.add("UPDATE")
 
-  if sb.index.len != 0:
+  if sb.index.len != 0 and not sb.isDrop:
     if sb.isUniqueIndex:
       query.add("UNIQUE")
     query.add("INDEX")
@@ -92,6 +96,12 @@ proc `$`*(sb: SqlBuilder): string {.gcsafe.} = ## \
 
     if sb.insert.len != 0:
       query.add("INTO")
+
+    if sb.isDrop:
+      if sb.index.len != 0:
+        query.add("INDEX")
+        query.add("IF EXISTS")
+        query.add(&"""idx_{sb.table[0]}_{sb.index.join("_")}""")
 
     if sb.isCreate:
       if sb.index.len != 0: ## \
@@ -319,6 +329,13 @@ proc create*(self: SqlBuilder): SqlBuilder {.gcsafe discardable.} = ## \
   ## create statement
 
   self.isCreate = true
+  self
+
+
+proc drop*(self: SqlBuilder): SqlBuilder {.gcsafe discardable.} = ## \
+  ## drop statement
+
+  self.isDrop = true
   self
 
 

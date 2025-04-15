@@ -456,6 +456,22 @@ proc createTable*[T: PostgreSql|MySql|SqLite, T2: ref object](
         column.reference.initTable
 
     session.execQuery(dbTbl.toSql)
+    # create index in defined
+    for k, v in dbTbl.columnsIndex:
+      session.execQuery(
+        sqlBuild.
+          create.
+          index(v).
+          table(dbTbl.validName)
+      )
+
+    for k, v in dbTbl.uniqueColumnsIndex:
+      session.execQuery(
+        sqlBuild.
+          create.
+          uniqueIndex(v).
+          table(dbTbl.validName)
+      )
 
   t.initTable
 

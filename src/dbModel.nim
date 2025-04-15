@@ -4,12 +4,14 @@ import std/[
     times,
     options,
     parseutils,
-    oids
+    oids,
+    tables
   ]
 export
   times,
   options,
-  oids
+  oids,
+  tables
 
 import sqlBuilder
 export sqlBuilder
@@ -22,11 +24,12 @@ template dbNullable* {.pragma.}
 template dbAutoIncrement* {.pragma.}
 template dbColumnType*(columnType: string) {.pragma.}
 template dbColumnLength*(length: BiggestInt) {.pragma.}
-template dbUnique* {.pragma.}
+template dbUnique*(name: seq[string] = @[]) {.pragma.}
 template dbReference*(t: typedesc) {.pragma.}
-template dbCompositeUnique* {.pragma.}
 template dbIgnore* {.pragma.}
 template dbUUID* {.pragma.}
+template dbIndex*(name: seq[string] = @[]) {.pragma.}
+template dbUniqueIndex*(name: seq[string] = @[]) {.pragma.}
 
 
 type
@@ -39,23 +42,78 @@ type
     columns*: seq[DbColumnModel]
     compositeUnique*: seq[string]
     dialect*: DbDialect
+    columnsIndex*: TableRef[string, seq[string]]
+    uniqueColumnsIndex*: TableRef[string, seq[string]]
+    uniqueColumns*: TableRef[string, seq[string]]
 
   DbColumnModel* = ref object of RootObj
     name*: string
     alias*: string
     isNullable*: bool
     isPrimaryKey*: bool
-    isCompositePrimaryKey: bool
     isAutoIncrement*: bool
     columnType*: string
     columnLength*: BiggestInt
     isUnique*: bool
-    isCompositeUnique: bool
     reference*: DbTableModel
     typeOf*: string
     dialect*: DbDialect
     value*: JsonNode
     valueStr*: string
+
+
+proc newDbTableModel*(
+    dialect: DbDialect,
+    name: string = "",
+    alias: string = "",
+    columns: seq[DbColumnModel] = @[],
+    columnsIndex: TableRef[string, seq[string]] = newTable[string, seq[string]](),
+    uniqueColumnsIndex: TableRef[string, seq[string]] = newTable[string, seq[string]](),
+    uniqueColumns: TableRef[string, seq[string]] = newTable[string, seq[string]]()
+  ): DbTableModel {.gcsafe.} = ## \
+  ## create new DbTableModel
+
+  DbTableModel(
+    dialect: dialect,
+    name: name,
+    alias: alias,
+    columns: columns,
+    columnsIndex: columnsIndex,
+    uniqueColumnsIndex: uniqueColumnsIndex,
+    uniqueColumns: uniqueColumns
+  )
+
+
+proc newDbColumnModel*(
+    dialect: DbDialect,
+    name: string = "",
+    alias: string = "",
+    isNullable: bool = false,
+    isPrimaryKey: bool = false,
+    isAutoIncrement: bool = false,
+    columnType: string = "",
+    columnLength: BiggestInt = 0,
+    reference: DbTableModel = nil,
+    typeOf: string = "",
+    value: JsonNode = nil,
+    valueStr: string = ""
+  ): DbColumnModel {.gcsafe.} = ## \
+  ## new DbColumnModel
+
+  DbColumnModel(
+    dialect: dialect,
+    name: name,
+    alias: alias,
+    isNullable: isNullable,
+    isPrimaryKey: isPrimaryKey,
+    isAutoIncrement: isAutoIncrement,
+    columnType: columnType,
+    columnLength: columnLength,
+    reference: reference,
+    typeOf: typeOf,
+    value: value,
+    valueStr: valueStr
+  )
 
 
 proc validName*[T: DbTableModel|DbColumnModel](
@@ -95,7 +153,7 @@ proc toColumnValue*(
       var res: BiggestFloat
       if val.parseBiggestFloat(res) != 0:
         result = %res
-    
+
     elif typeOf.isOptionalBoolMember:
       result = %false
       if val.toLowerAscii.contains("t") or
@@ -166,11 +224,8 @@ proc toSql*(self: DbTableModel): SqlBuilder {.gcsafe.} = ## \
         "CASCADE",
         "CASCADE")
 
-    if column.isUnique:
-      sqlb.unique(column.validName)
-
-  if self.compositeUnique.len != 0:
-    sqlb.unique(self.compositeUnique.join(", "))
+  for _, v in self.uniqueColumns:
+    sqlb.unique(v.join(", "))
 
   if isIdAutoIncrement and self.dialect == DBSqLite:
     sqlb.primaryKey("id AUTOINCREMENT")
@@ -185,13 +240,13 @@ proc toDbTable*[T: ref object](
   ## convert ref object to DbTableModel
 
   if t.hasCustomPragma(dbTable):
-    result = DbTableModel(dialect: dialect)
+    result = newDbTableModel(dialect)
     result.name = $ type T
     result.alias = t.getCustomPragmaVal(dbTable)
 
     for k, v in t[].fieldPairs:
       when not v.hasCustomPragma(dbIgnore):
-        var column = DbColumnModel(dialect: dialect)
+        var column = newDbColumnModel(dialect)
         column.name = k
         var columnName = column.name
 
@@ -208,9 +263,40 @@ proc toDbTable*[T: ref object](
         when v.hasCustomPragma(dbColumnLength):
           column.columnLength = v.getCustomPragmaVal(dbColumnLength)
 
-        column.isUnique = v.hasCustomPragma(dbUnique)
-        column.isCompositeUnique = v.hasCustomPragma(dbCompositeUnique)
         column.isNullable = v.hasCustomPragma(dbNullable)
+
+        when v.hasCustomPragma(dbUnique):
+          for name in v.getCustomPragmaVal(dbUnique):
+            if not result.uniqueColumns.hasKey(name):
+              result.uniqueColumns[name] = @[]
+
+            if columnName notin result.uniqueColumns[name]:
+              result.uniqueColumns[name].add(columnName)
+
+          if v.getCustomPragmaVal(dbUnique).len == 0:
+            result.uniqueColumns[columnName] = @[columnName]
+
+        when v.hasCustomPragma(dbUniqueIndex):
+          for name in v.getCustomPragmaVal(dbUniqueIndex):
+            if not result.uniqueColumnsIndex.hasKey(name):
+              result.uniqueColumnsIndex[name] = @[]
+
+            if columnName notin result.uniqueColumnsIndex[name]:
+              result.uniqueColumnsIndex[name].add(columnName)
+
+          if v.getCustomPragmaVal(dbUniqueIndex).len == 0:
+            result.uniqueColumnsIndex[columnName] = @[columnName]
+
+        when v.hasCustomPragma(dbIndex):
+          for name in v.getCustomPragmaVal(dbIndex):
+            if not result.columnsIndex.hasKey(name):
+              result.columnsIndex[name] = @[]
+
+            if columnName notin result.columnsIndex[name]:
+              result.columnsIndex[name].add(columnName)
+
+          if v.getCustomPragmaVal(dbIndex).len == 0:
+            result.columnsIndex[columnName] = @[columnName]
 
         if withReference:
           when v.hasCustomPragma(dbReference):
@@ -222,9 +308,6 @@ proc toDbTable*[T: ref object](
 
         column.typeOf = $ type v
         column.value = %v
-
-        when v.hasCustomPragma(dbCompositeUnique):
-          result.compositeUnique.add(columnName)
 
         result.columns.add(column)
 

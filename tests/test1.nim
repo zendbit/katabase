@@ -150,6 +150,23 @@ test "test katabase functionality":
   echo tindex
   kbase.execQuery(tindex)
 
+  echo "== Test drop index"
+  tindex = sqlBuild.
+    drop.
+    index(("name", "last_update")).
+    table("tbl_users")
+
+  echo tindex
+  kbase.execQuery(tindex)
+
+  tindex = sqlBuild.
+    drop.
+    index(("name", "uuid")).
+    table("tbl_users")
+
+  echo tindex
+  kbase.execQuery(tindex)
+
 
   ## lets try to insert into Users table
   echo "== Test insert"
