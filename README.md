@@ -820,6 +820,10 @@ dbSession.execQuery(...)
 dbSession.execQueryAffectedRows(...)
 dbSession.queryRows(...)
 dbSession.queryOneRow(...)
+dbSession.insert(...)
+dbSession.update(...)
+dbSession.delete(...)
+dbSession.select(...)
 ## etc ...
 
 ## or with transaction
