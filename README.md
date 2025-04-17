@@ -803,7 +803,7 @@ for post in posts:
 ```
 
 ## Connection pooling
-We plan to add support for connection pooling for our next developement, but we need to make sure everythings are agnostic between sqlite, mariadb and postgresql. Because we don't want to break previous our release and make smooth movement
+We plan to add support for connection pooling for our next developement, but we need to make sure everythings are agnostic between sqlite, mariadb and postgresql. Because we don't want to break our previous release and make smooth movement
 
 ## Work with transaction and query session
 we can create session for multiple query, and also we can use transaction between session
