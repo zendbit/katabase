@@ -815,7 +815,7 @@ let kbase = newKatabase[SqLite]("", "local.db", "", "")
 ## start session
 let dbSession = kbase.session
 
-## do something multiple query here, may you need transaction you can do here also
+## do something multiple query here, may you need transaction you can also do here
 dbSession.execQuery(...)
 dbSession.execQueryAffectedRows(...)
 dbSession.queryRows(...)
