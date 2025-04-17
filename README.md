@@ -833,7 +833,7 @@ dbSession.transactionBegin
 ## do some db operation here
 
 ## check with query if condition meet commit if not roolback
-if (something_wrong):
+if somethingWrong:
   dbSession.transactionRollback
 else:
   dbSession.transactionCommit
