@@ -801,3 +801,44 @@ for post in posts:
   echo "Post id " & $post["id"].getBiggestInt.val
   echo "Post content " & post["post"]
 ```
+
+## Connection pooling
+We plan to add support for connection pooling for our next developement, but we need to make sure everythings are agnostic between sqlite, mariadb and postgresql. Because we don't want to break our previous release and make smooth movement
+
+## Work with transaction and query session
+we can create session for multiple query, and also we can use transaction between session
+
+```nim
+let kbase = newKatabase[SqLite]("", "local.db", "", "")
+
+#####
+## start session
+let dbSession = kbase.session
+
+## do something multiple query here, may you need transaction you can also do here
+dbSession.execQuery(...)
+dbSession.execQueryAffectedRows(...)
+dbSession.queryRows(...)
+dbSession.queryOneRow(...)
+dbSession.insert(...)
+dbSession.update(...)
+dbSession.delete(...)
+dbSession.select(...)
+## etc ...
+
+## or with transaction
+## start transaction
+dbSession.transactionBegin
+
+## do some db operation here
+
+## check with query if condition meet commit if not roolback
+if somethingWrong:
+  dbSession.transactionRollback
+else:
+  dbSession.transactionCommit
+
+## close session
+dbSession.close
+#####
+```
