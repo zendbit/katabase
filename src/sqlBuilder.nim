@@ -57,7 +57,7 @@ proc newSqlBuilder*(): SqlBuilder {.gcsafe.} = ## \
 proc escapeQuery(query: string): string {.gcsafe.} = ## \
   ## escape query
 
-  query.replace("??", "$??").replace("?", "$#").replace("$??", "?")
+  query.replace("??", "$_$_$").replace("?", "$#").replace("$_$_$", "?")
 
 
 proc `$`*(sb: SqlBuilder): string {.gcsafe.} = ## \
