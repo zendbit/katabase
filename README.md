@@ -16,6 +16,9 @@ direct from git repo
 nimble install https://github.com/zendbit/katabase
 ```
 
+## Documentation
+https://deepwiki.com/zendbit/katabase
+
 ## Usage
 ```nim
 import katabase
