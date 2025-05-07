@@ -125,25 +125,6 @@ proc isOptionalIntMember*(val: string): bool {.gcsafe.} = ## \
     ]
 
 
-proc isIntMember*(val: string): bool {.gcsafe.} = ## \
-  ## check if string is int value
-
-  val in [
-      $ type int,
-      $ type uint,
-      $ type int8,
-      $ type uint8,
-      $ type int16,
-      $ type uint16,
-      $ type int64,
-      $ type uint64,
-      $ type int32,
-      $ type uint32,
-      $ type BiggestInt,
-      $ type BiggestUInt
-    ]
-
-
 proc isOptionalFloatMember*(val: string): bool {.gcsafe.} = ## \
   ## check if string is optional float value
 
@@ -152,17 +133,6 @@ proc isOptionalFloatMember*(val: string): bool {.gcsafe.} = ## \
       $ type Option[float32],
       $ type Option[float],
       $ type Option[BiggestFloat]
-    ]
-
-
-proc isFloatMember*(val: string): bool {.gcsafe.} = ## \
-  ## check if string is float value
-
-  val in [
-      $ type float64,
-      $ type float32,
-      $ type float,
-      $ type BiggestFloat
     ]
 
 

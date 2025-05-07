@@ -8,11 +8,15 @@ export
 import
   std/[
     nativesockets,
-    asyncdispatch
-  ]
+    asyncdispatch,
+    times
+  ],
+  uuids
 export
   Port,
-  asyncdispatch
+  asyncdispatch,
+  uuids,
+  times
 
 
 type
@@ -507,21 +511,34 @@ proc createTableAsync*[T: ref object](
 
 proc insert*[T: PostgreSql|MySql|SqLite, T2: ref object](
     session: T,
-    t: T2
+    table: T2
   ): BiggestInt {.gcsafe.} = ## \
   ## insert
 
-  let t = t.toDbTable(session.whichDialect)
+  let t = table.toDbTable(session.whichDialect)
   let insertDbColumns: seq[DbColumnModel] =
     t.columns.filter(proc (c: DbColumnModel): bool =
       c.name != "id" or
       (c.name == "id" and c.value.kind != JNull))
 
-  let columnNames: seq[string] =
+  var columnNames: seq[string] =
       insertDbColumns.map(proc (c: DbColumnModel): string = c.validName)
 
-  let insertValues: seq[JsonNode] =
+  var insertValues: seq[JsonNode] =
       insertDbColumns.map(proc (c: DbColumnModel): JsonNode = c.value)
+
+  when table is DbModel2:
+    ## if DbModel2 insert uuid, createdAt, updatedAt, isActive
+    let insertedAt = now().utc.format("yyyy-MM-dd HH:mm:ss")
+    for (colName, colVal) in
+      [
+        ("uuid", % $genUUID()),
+        ("createdAt", %insertedAt),
+        ("updatedAt", %insertedAt),
+        ("isActive", %1)
+      ]:
+      columnNames.add(colName)
+      insertValues.add(colVal)
 
   session.insertRow(
     sqlBuild.
@@ -593,10 +610,20 @@ proc update*[T: PostgreSql|MySql|SqLite, T2: ref object](
   ## update database
 
   let t = table.toDbTable(session.whichDialect, false)
-  let columnNames = t.columnValidNames.filter(proc (s: string): bool = s != "id")
-  let updateValues =
+  var columnNames = t.columnValidNames.filter(proc (s: string): bool = s != "id")
+  var updateValues =
     t.columns.filter(proc (c: DbColumnModel): bool = c.validName != "id").
     map(proc (c: DbColumnModel): JsonNode = c.value)
+
+  when table is DbModel2:
+    ## if DbModel2 insert uuid, createdAt, updatedAt, isActive
+    let updatedAt = now().utc.format("yyyy-MM-dd HH:mm:ss")
+    for (colName, colVal) in
+      [
+        ("updatedAt", %updatedAt),
+      ]:
+      columnNames.add(colName)
+      insertValues.add(colVal)
 
 
   let updateRow = if condition.isNil: sqlBuild else: condition

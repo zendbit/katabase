@@ -38,6 +38,13 @@ type
   DbModel* {.dbTable.} = ref object of RootObj
     id* {.dbPrimaryKey dbAutoIncrement.}: Option[BiggestInt]
 
+  DbModel2* {.dbTable.} = ref object of DbModel
+    ## extension of DbModel with detail information field
+    uuid* {.dbUUID dbUnique dbIndex.}: Option[string]
+    createdAt* {.dbColumnType: "TIMESTAMP".}: Option[string]
+    updatedAt* {.dbColumnType: "TIMESTAMP".}: Option[string]
+    isActive*: Option[bool]
+
   DbTableModel* = ref object of RootObj
     name*: string
     alias*: string
@@ -184,12 +191,18 @@ proc toSql*(self: DbTableModel): SqlBuilder {.gcsafe.} = ## \
       if column.typeOf.isOptionalIntMember:
         columnType = "INTEGER"
 
+        if column.isAutoIncrement:
+          columnType = "BIGINT"
+
         if column.dialect == DbPostgreSql and
           column.isAutoIncrement:
           columnType = "BIGSERIAL"
 
       elif column.typeOf.isOptionalFloatMember:
         columnType = "REAL"
+
+        if column.dialect == DbMySql:
+          columnType = "DOUBLE"
 
       elif column.typeOf.isOptionalBoolMember:
         columnType = "INTEGER ( 1 )"
@@ -204,6 +217,9 @@ proc toSql*(self: DbTableModel): SqlBuilder {.gcsafe.} = ## \
     if column.validName == "id" and column.isAutoIncrement: ## \
       ## if column name is id then make it auto increment
       isIdAutoIncrement = true
+
+    ## if default reference to id make it BIGINT
+    if not column.reference.isNil: columnType = "BIGINT"
 
     sqlb.column(
       column.validName,
