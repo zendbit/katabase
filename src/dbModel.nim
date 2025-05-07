@@ -4,17 +4,19 @@ import std/[
     times,
     options,
     parseutils,
-    oids,
     tables
-  ]
+  ],
+  uuids
 export
   times,
   options,
-  oids,
-  tables
+  tables,
+  uuids
 
-import sqlBuilder
-export sqlBuilder
+import
+  sqlBuilder
+export
+  sqlBuilder
 
 
 template dbTable*(name: string = "") {.pragma.}
@@ -180,23 +182,17 @@ proc toSql*(self: DbTableModel): SqlBuilder {.gcsafe.} = ## \
     # if not pragma not set then set to default depend on the value
     if columnType == "":
       if column.typeOf.isOptionalIntMember:
-        columnType = "BIGINT"
+        columnType = "INTEGER"
 
         if column.dialect == DbPostgreSql and
           column.isAutoIncrement:
           columnType = "BIGSERIAL"
 
-        elif column.dialect == DbSqLite:
-          columnType = "INTEGER"
-
       elif column.typeOf.isOptionalFloatMember:
-        columnType = "DOUBLE PRECISION"
-
-        if column.dialect == DbSqLite:
-          columnType = "REAL"
+        columnType = "REAL"
 
       elif column.typeOf.isOptionalBoolMember:
-        columnType = "INTEGER (1)"
+        columnType = "INTEGER ( 1 )"
 
       else:
         columnType = "TEXT"

@@ -11,3 +11,4 @@ srcDir        = "src"
 
 requires "nim >= 2.0.0"
 requires "dbconnector"
+requires "uuids >= 0.1.12"
