@@ -515,30 +515,25 @@ proc insert*[T: PostgreSql|MySql|SqLite, T2: ref object](
   ): BiggestInt {.gcsafe.} = ## \
   ## insert
 
+  when table is DbModel2:
+    ## if DbModel2 insert uuid, createdAt, updatedAt, isActive
+    let insertedAt = now().utc.format("yyyy-MM-dd HH:mm:ss")
+    table.uuid = some $genUUID()
+    table.createdAt = some insertedAt
+    table.updatedAt = some insertedAt
+    table.isActive = some true
+
   let t = table.toDbTable(session.whichDialect)
   let insertDbColumns: seq[DbColumnModel] =
     t.columns.filter(proc (c: DbColumnModel): bool =
       c.name != "id" or
       (c.name == "id" and c.value.kind != JNull))
 
-  var columnNames: seq[string] =
+  let columnNames: seq[string] =
       insertDbColumns.map(proc (c: DbColumnModel): string = c.validName)
 
-  var insertValues: seq[JsonNode] =
+  let insertValues: seq[JsonNode] =
       insertDbColumns.map(proc (c: DbColumnModel): JsonNode = c.value)
-
-  when table is DbModel2:
-    ## if DbModel2 insert uuid, createdAt, updatedAt, isActive
-    let insertedAt = now().utc.format("yyyy-MM-dd HH:mm:ss")
-    for (colName, colVal) in
-      [
-        ("uuid", % $genUUID()),
-        ("createdAt", %insertedAt),
-        ("updatedAt", %insertedAt),
-        ("isActive", %1)
-      ]:
-      columnNames.add(colName)
-      insertValues.add(colVal)
 
   session.insertRow(
     sqlBuild.
@@ -609,22 +604,16 @@ proc update*[T: PostgreSql|MySql|SqLite, T2: ref object](
   ): BiggestInt {.gcsafe.} = ## \
   ## update database
 
-  let t = table.toDbTable(session.whichDialect, false)
-  var columnNames = t.columnValidNames.filter(proc (s: string): bool = s != "id")
-  var updateValues =
-    t.columns.filter(proc (c: DbColumnModel): bool = c.validName != "id").
-    map(proc (c: DbColumnModel): JsonNode = c.value)
-
   when table is DbModel2:
     ## if DbModel2 insert uuid, createdAt, updatedAt, isActive
     let updatedAt = now().utc.format("yyyy-MM-dd HH:mm:ss")
-    for (colName, colVal) in
-      [
-        ("updatedAt", %updatedAt),
-      ]:
-      columnNames.add(colName)
-      insertValues.add(colVal)
+    table.updatedAt = some updatedAt
 
+  let t = table.toDbTable(session.whichDialect, false)
+  let columnNames = t.columnValidNames.filter(proc (s: string): bool = s != "id")
+  let updateValues =
+    t.columns.filter(proc (c: DbColumnModel): bool = c.validName != "id").
+    map(proc (c: DbColumnModel): JsonNode = c.value)
 
   let updateRow = if condition.isNil: sqlBuild else: condition
 
