@@ -16,7 +16,8 @@ import std/[
     strutils,
     options,
     xmlparser,
-    xmltree
+    xmltree,
+    tables
   ]
 export
   json,
@@ -25,7 +26,8 @@ export
   strutils,
   options,
   xmlparser,
-  xmltree
+  xmltree,
+  tables
 
 
 let dbEscape* = db_sqlite.dbQuote
@@ -43,15 +45,6 @@ type
 
   RowResult* = tuple[key: seq[string], val: DbRow]
   RowResults* = seq[RowResult]
-
-
-proc `%`*(t: RowResult): JsonNode {.gcsafe.} = ## \
-  ## convert RowResult to JsonNode
-
-  result = %*{
-      "key": t.key,
-      "val": t.val
-    }
 
 
 proc `in`*[T: RowResult|RowResults](column: string, row: T): bool {.gcsafe.} = ## \
@@ -77,6 +70,17 @@ proc `[]`*(row: RowResult, column: string): string {.gcsafe.} = ## \
     else: break
 
   row.val[idx]
+
+
+proc toTable*(row: RowResult): Table[string, string] {.gcsafe.} =
+  result = initTable[string, string]()
+  for idx in 0..row.key.high:
+    result[row.key[idx]] = row.val[idx]
+
+
+proc toSeqTable*(rows: RowResults): seq[Table[string, string]] {.gcsafe.} =
+  for row in rows:
+    result.add(row.toTable)
 
 
 proc toDbValue*(
