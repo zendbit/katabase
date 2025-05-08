@@ -465,7 +465,7 @@ proc createTable*[T: PostgreSql|MySql|SqLite, T2: ref object](
       session.execQuery(
         sqlBuild.
           create.
-          index(v).
+          index(k, v).
           table(dbTbl.validName)
       )
 
@@ -473,7 +473,7 @@ proc createTable*[T: PostgreSql|MySql|SqLite, T2: ref object](
       session.execQuery(
         sqlBuild.
           create.
-          uniqueIndex(v).
+          uniqueIndex(k, v).
           table(dbTbl.validName)
       )
 

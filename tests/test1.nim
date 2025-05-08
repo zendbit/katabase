@@ -136,7 +136,7 @@ test "test katabase functionality":
   echo "== Test create index"
   var tindex = sqlBuild.
     create.
-    uniqueIndex(("name", "last_update")).
+    uniqueIndex("index_key_1", ("name", "last_update")).
     table("tbl_users")
 
   echo tindex
@@ -144,7 +144,7 @@ test "test katabase functionality":
 
   tindex = sqlBuild.
     create.
-    index(("name", "uuid")).
+    index("index_key_2", ("name", "uuid")).
     table("tbl_users")
 
   echo tindex
@@ -153,7 +153,7 @@ test "test katabase functionality":
   echo "== Test drop index"
   tindex = sqlBuild.
     drop.
-    index(("name", "last_update")).
+    index("index_key_1").
     table("tbl_users")
 
   echo tindex
@@ -161,7 +161,7 @@ test "test katabase functionality":
 
   tindex = sqlBuild.
     drop.
-    index(("name", "uuid")).
+    index("index_key_2").
     table("tbl_users")
 
   echo tindex

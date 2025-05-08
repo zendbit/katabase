@@ -10,6 +10,7 @@ type
     select: seq[string]
     isSelectDistinct: bool
     index: seq[string]
+    indexKey: string
     isUniqueIndex: bool
     table: seq[string]
     where: seq[string]
@@ -98,15 +99,15 @@ proc `$`*(sb: SqlBuilder): string {.gcsafe.} = ## \
       query.add("INTO")
 
     if sb.isDrop:
-      if sb.index.len != 0:
+      if sb.indexKey != "":
         query.add("INDEX")
         query.add("IF EXISTS")
-        query.add(&"""idx_{sb.table[0]}_{sb.index.join("_")}""")
+        query.add(sb.indexKey)
 
     if sb.isCreate:
       if sb.index.len != 0: ## \
         ## if create index
-        query.add(&"""idx_{sb.table[0]}_{sb.index.join("_")}""")
+        query.add(sb.indexKey)
         query.add("ON")
         query.add(sb.table[0])
         query.add("(")
@@ -117,7 +118,7 @@ proc `$`*(sb: SqlBuilder): string {.gcsafe.} = ## \
         query.add("TABLE")
         query.add("IF NOT EXISTS")
 
-    if sb.index.len == 0: ## \
+    if sb.index.len == 0 and sb.indexKey == "": ## \
       ## if not create index
       query.add(sb.table.join(", "))
 
@@ -341,21 +342,46 @@ proc drop*(self: SqlBuilder): SqlBuilder {.gcsafe discardable.} = ## \
 
 proc index*[T](
     self: SqlBuilder,
+    key: string,
     column: T
   ): SqlBuilder {.gcsafe discardable.} = ## \
   ## create column index
 
   self.index &= column.toSqlBuilderParam
+  self.indexKey = key
   self
 
 
 proc uniqueIndex*[T](
     self: SqlBuilder,
+    key: string,
     column: T
   ): SqlBuilder {.gcsafe discardable.} = ## \
   ## create column index
 
-  self.index(column)
+  self.index(key, column)
+  self.isUniqueIndex = true
+  self.indexKey = key
+  self
+
+
+proc index*(
+    self: SqlBuilder,
+    key: string
+  ): SqlBuilder {.gcsafe discardable.} = ## \
+  ## create column index
+
+  self.indexKey = key
+  self
+
+
+proc uniqueIndex*(
+    self: SqlBuilder,
+    key: string
+  ): SqlBuilder {.gcsafe discardable.} = ## \
+  ## create column index
+
+  self.index(key)
   self.isUniqueIndex = true
   self
 
