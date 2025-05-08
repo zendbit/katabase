@@ -191,7 +191,8 @@ proc toSql*(self: DbTableModel): SqlBuilder {.gcsafe.} = ## \
       if column.typeOf.isOptionalIntMember:
         columnType = "INTEGER"
 
-        if column.isAutoIncrement:
+        if column.dialect == DbMySql and
+          column.isAutoIncrement:
           columnType = "BIGINT"
 
         if column.dialect == DbPostgreSql and

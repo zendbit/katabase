@@ -170,11 +170,11 @@ test "test katabase functionality":
 
   ## lets try to insert into Users table
   echo "== Test insert"
-  ## insert single directly
+  # insert single directly
   let userId = kbase.insert(
       Users(
         name: some "Foo",
-        uuid: some $genOid(),
+        uuid: some $genUUID(),
         lastUpdate: some "2025-01-30",
         isActive: some true
       )
@@ -184,20 +184,20 @@ test "test katabase functionality":
   ## userId value is primary key autoincrement from table
   ## after data inserted
   ##
-  echo "User Foo id " & $userId
-
+  #echo "User Foo id " & $userId
+  echo "== Test insert multiple"
   ## we can also add multiple insert using batch list
   let numUserInserted = kbase.insert(
       [
         Users(
           name: some "Bar",
-          uuid: some $genOid(),
+          uuid: some $genUUID(),
           lastUpdate: some "2025-01-30",
           isActive: some true
         ),
         Users(
           name: some "Blah",
-          uuid: some $genOid(),
+          uuid: some $genUUID(),
           lastUpdate: some "2025-01-30",
           isActive: some true
         )
@@ -292,7 +292,7 @@ test "test katabase functionality":
     let userId = kbase.insertRow(
         sqlBuild.
           insert(("name", "uuid", "last_update", "is_active")).
-          value(("Foo", $genOid(), "2025-01-30", true)).
+          value(("Foo", $genUUID(), "2025-01-30", true)).
           table("tbl_users")
       )
 
@@ -311,8 +311,8 @@ test "test katabase functionality":
           insert(("name", "uuid", "last_update", "is_active")).
           value(
             @[
-              ("Bar", $genOid(), "2025-01-30", true),
-              ("Blah", $genOid(), "2025-01-30", true)
+              ("Bar", $genUUID(), "2025-01-30", true),
+              ("Blah", $genUUID(), "2025-01-30", true)
             ]
           ).
           table("tbl_users")

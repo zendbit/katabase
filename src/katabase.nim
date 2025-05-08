@@ -509,7 +509,7 @@ proc createTableAsync*[T: ref object](
   self.createTable(table)
 
 
-proc insert*[T: PostgreSql|MySql|SqLite, T2: DbModel|DbModel2](
+proc insert*[T: PostgreSql|MySql|SqLite, T2: ref object](
     session: T,
     table: T2
   ): tuple[id: BiggestInt, uuid: string] {.gcsafe.} = ## \
@@ -558,18 +558,18 @@ proc insertAsync*[T: PostgreSql|MySql|SqLite](
   session.insert(t).id
 
 
-proc insertAsync*[T: PostgreSql|MySql|SqLite](
+#[proc insertAsync*[T: PostgreSql|MySql|SqLite](
     session: T,
     t: DbModel2
   ): Future[tuple[id: BiggestInt, uuid: string]] {.async gcsafe.} = ## \
   ## insert
 
-  session.insert(t)
+  session.insert(t)]#
 
 
-proc insert*(
+proc insert*[T: DbModel](
     self: Katabase,
-    table: DbModel
+    table: T
   ): BiggestInt {.gcsafe.} = ## \
   ## insert into table
 
@@ -578,9 +578,9 @@ proc insert*(
   conn.close
 
 
-proc insert*(
+proc insert*[T: DbModel2](
     self: Katabase,
-    table: DbModel2
+    table: T
   ): tuple[id: BiggestInt, uuid: string] {.gcsafe.} = ## \
   ## insert into table
 
@@ -589,25 +589,25 @@ proc insert*(
   conn.close
 
 
-proc insertAsync*(
+proc insertAsync*[T: DbModel](
     self: Katabase,
-    table: DbModel
+    table: T
   ): Future[BiggestInt] {.async gcsafe.} = ## \
   ## insert into table async
 
   self.insert(table).id
 
 
-proc insertAsync*(
+proc insertAsync*[T: DbModel2](
     self: Katabase,
-    table: DbModel2
+    table: T
   ): Future[tuple[id: BiggestInt, uuid: string]] {.async gcsafe.} = ## \
   ## insert into table async
 
   self.insert(table)
 
 
-proc insert*[T: ref object](
+proc insert*[T: DbModel|DbModel2](
     self: Katabase,
     table: openArray[T]
   ): BiggestInt {.gcsafe.} = ## \
@@ -623,7 +623,7 @@ proc insert*[T: ref object](
   conn.close
 
 
-proc insertAsync*[T: ref object](
+proc insertAsync*[T: DbModel|DbModel2](
     self: Katabase,
     table: openArray[T]
   ): Future[BiggestInt] {.async gcsafe.} = ## \
@@ -632,7 +632,7 @@ proc insertAsync*[T: ref object](
   self.insert(table)
 
 
-proc update*[T: PostgreSql|MySql|SqLite, T2: ref object](
+proc update*[T: PostgreSql|MySql|SqLite, T2: DbModel|DbModel2](
     session: T,
     table: T2,
     condition: SqlBuilder = nil
@@ -663,7 +663,7 @@ proc update*[T: PostgreSql|MySql|SqLite, T2: ref object](
   session.execQueryAffectedRows(updateRow)
 
 
-proc updateAsync*[T: PostgreSql|MySql|SqLite, T2: ref object](
+proc updateAsync*[T: PostgreSql|MySql|SqLite, T2: DbModel|DbModel2](
     session: T,
     table: T2,
     condition: SqlBuilder = nil
@@ -673,7 +673,7 @@ proc updateAsync*[T: PostgreSql|MySql|SqLite, T2: ref object](
   session.updateAsync(table, condition)
 
 
-proc update*[T: ref object](
+proc update*[T: DbModel|DbModel2](
     self: Katabase,
     table: T,
     condition: SqlBuilder = nil
@@ -685,7 +685,7 @@ proc update*[T: ref object](
   conn.close
 
 
-proc updateAsync*[T: ref object](
+proc updateAsync*[T: DbModel|DbModel2](
     self: Katabase,
     table: T,
     condition: SqlBuilder = nil
@@ -695,7 +695,7 @@ proc updateAsync*[T: ref object](
   self.update(table, condition)
 
 
-proc update*[T: ref object](
+proc update*[T: DbModel|DbModel2](
     self: Katabase,
     table: openArray[T],
     condition: SqlBuilder = nil
@@ -712,7 +712,7 @@ proc update*[T: ref object](
   conn.close
 
 
-proc updateAsync*[T: ref object](
+proc updateAsync*[T: DbModel|DbModel2](
     self: Katabase,
     table: openArray[T],
     condition: SqlBuilder = nil
@@ -722,7 +722,7 @@ proc updateAsync*[T: ref object](
   self.update(table, condition)
 
 
-proc select*[T: PostgreSql|MySql|SqLite, T2: ref object](
+proc select*[T: PostgreSql|MySql|SqLite, T2: DbModel|DbModel2](
     session: T,
     table: T2,
     condition: SqlBuilder = nil
@@ -740,7 +740,7 @@ proc select*[T: PostgreSql|MySql|SqLite, T2: ref object](
     to(T2)
 
 
-proc selectAsync*[T: PostgreSql|MySql|SqLite, T2: ref object](
+proc selectAsync*[T: PostgreSql|MySql|SqLite, T2: DbModel|DbModel2](
     session: T,
     table: T2,
     condition: SqlBuilder = nil
@@ -750,7 +750,7 @@ proc selectAsync*[T: PostgreSql|MySql|SqLite, T2: ref object](
   session.select(table, condition)
 
 
-proc select*[T: ref object](
+proc select*[T: DbModel|DbModel2](
     self: Katabase,
     table: T,
     condition: SqlBuilder = nil,
@@ -762,7 +762,7 @@ proc select*[T: ref object](
   conn.close
 
 
-proc selectAsync*[T: ref object](
+proc selectAsync*[T: DbModel|DbModel2](
     self: Katabase,
     table: T,
     condition: SqlBuilder = nil,
@@ -772,7 +772,7 @@ proc selectAsync*[T: ref object](
   self.select(table, condition)
 
 
-proc selectOne*[T: PostgreSql|MySql|SqLite, T2: ref object](
+proc selectOne*[T: PostgreSql|MySql|SqLite, T2: DbModel|DbModel2](
     session: T,
     table: T2,
     condition: SqlBuilder = nil
@@ -792,7 +792,7 @@ proc selectOne*[T: PostgreSql|MySql|SqLite, T2: ref object](
   if queryResult.id.isSome: result = queryResult
 
 
-proc selectOneAsync*[T: PostgreSql|MySql|SqLite, T2: ref object](
+proc selectOneAsync*[T: PostgreSql|MySql|SqLite, T2: DbModel|DbModel2](
     session: T,
     table: T2,
     condition: SqlBuilder = nil
@@ -802,7 +802,7 @@ proc selectOneAsync*[T: PostgreSql|MySql|SqLite, T2: ref object](
   session.selectOne(table, condition)
 
 
-proc selectOne*[T: ref object](
+proc selectOne*[T: DbModel|DbModel2](
     self: Katabase,
     table: T,
     condition: SqlBuilder = nil
@@ -814,7 +814,7 @@ proc selectOne*[T: ref object](
   conn.close
 
 
-proc selectOneAsync*[T: ref object](
+proc selectOneAsync*[T: DbModel|DbModel2](
     self: Katabase,
     table: T,
     condition: SqlBuilder = nil
@@ -824,7 +824,7 @@ proc selectOneAsync*[T: ref object](
   self.selectOne(table, condition)
 
 
-proc count*[T: PostgreSql|MySql|SqLite, T2: ref object](
+proc count*[T: PostgreSql|MySql|SqLite, T2: DbModel|DbModel2](
     session: T,
     table: T2,
     condition: SqlBuilder = nil
@@ -840,7 +840,7 @@ proc count*[T: PostgreSql|MySql|SqLite, T2: ref object](
   session.queryOneRow(selectRow)[0].parseBiggestInt
 
 
-proc countAsync*[T: PostgreSql|MySql|SqLite, T2: ref object](
+proc countAsync*[T: PostgreSql|MySql|SqLite, T2: DbModel|DbModel2](
     session: T,
     table: T2,
     condition: SqlBuilder = nil
@@ -850,7 +850,7 @@ proc countAsync*[T: PostgreSql|MySql|SqLite, T2: ref object](
   session.count(table, condition)
 
 
-proc count*[T: ref object](
+proc count*[T: DbModel|DbModel2](
     self: Katabase,
     table: T,
     condition: SqlBuilder = nil
@@ -862,7 +862,7 @@ proc count*[T: ref object](
   conn.close
 
 
-proc countAsync*[T: ref object](
+proc countAsync*[T: DbModel|DbModel2](
     self: Katabase,
     table: T,
     condition: SqlBuilder = nil
@@ -872,7 +872,7 @@ proc countAsync*[T: ref object](
   self.count(table, condition)
 
 
-proc delete*[T: PostgreSql|MySql|SqLite, T2: ref object](
+proc delete*[T: PostgreSql|MySql|SqLite, T2: DbModel|DbModel2](
     session: T,
     table: T2,
     condition: SqlBuilder = nil
@@ -892,7 +892,7 @@ proc delete*[T: PostgreSql|MySql|SqLite, T2: ref object](
   session.execQueryAffectedRows(deleteRow)
 
 
-proc deleteAsync*[T: PostgreSql|MySql|SqLite, T2: ref object](
+proc deleteAsync*[T: PostgreSql|MySql|SqLite, T2: DbModel|DbModel2](
     session: T,
     table: T2,
     condition: SqlBuilder = nil
@@ -902,7 +902,7 @@ proc deleteAsync*[T: PostgreSql|MySql|SqLite, T2: ref object](
   session.delete(table, condition)
 
 
-proc delete*[T: ref object](
+proc delete*[T: DbModel|DbModel2](
     self: Katabase,
     table: T,
     condition: SqlBuilder = nil
@@ -914,7 +914,7 @@ proc delete*[T: ref object](
   conn.close
 
 
-proc deleteAsync*[T: ref object](
+proc deleteAsync*[T: DbModel|DbModel2](
     self: Katabase,
     table: T,
     condition: SqlBuilder = nil
@@ -924,7 +924,7 @@ proc deleteAsync*[T: ref object](
   self.delete(table, condition)
 
 
-proc delete*[T: ref object](
+proc delete*[T: DbModel|DbModel2](
     self: Katabase,
     table: openArray[T],
     condition: SqlBuilder = nil
@@ -941,7 +941,7 @@ proc delete*[T: ref object](
   conn.close
 
 
-proc deleteAsync*[T: ref object](
+proc deleteAsync*[T: DbModel|DbModel2](
     self: Katabase,
     table: openArray[T],
     condition: SqlBuilder = nil
