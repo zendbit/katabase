@@ -113,7 +113,7 @@ type
 
 ***{.dbUUID.}***: database table column uuid type, for MySql and PostgreSql will
 use UUID type but on SqLite will use TEXT type. To generate using nim oids just
-use $genOid() when inserting data.
+use $genUUID() when inserting data.
 ```nim
 type
   Users* {.dbTable.} = ref object of DbModel ## \
@@ -202,18 +202,18 @@ we can create group of multiple column as unique using sequence as identifier
 type
   SomeType* {.dbTable.} = ref object of DbModel
     field1* {.
-      dbUnique: @["field1_field2", "field1_field2_field3"]
+      dbUnique: @["unique2", "unique3"]
     .}: Option[string]
     field2* {.
-      dbUnique: @["field1_field2", "field1_field2_field3"]
+      dbUnique: @["unique1", "unique3"]
     .}: Option[string]
     field3* {.
-      dbUnique: @["field3", "field1_field2_field3"]
+      dbUnique: @["unique2", "unique3"]
     .}: Option[string]
 
-## field1_field2 will group and combine field1 and field2 as unique
-## field3 will only field3 unique
-## field1_field2_field3 will group and combine field1, field2, and field3 as unique
+## unique2 will group and combine field1 and field3 as unique
+## unique1 will only field2 unique
+## unique3 will group and combine field1, field2, and field3 as unique
 ```
 
 ***{.dbIndex.}***: create column indexing
@@ -238,18 +238,18 @@ we can create group of multiple column indexing using sequence as identifier
 type
   SomeType* {.dbTable.} = ref object of DbModel
     field1* {.
-      dbIndex: @["field1", "field1_field2", "field1_field2_field3"]
+      dbIndex: @["index1", "index2", "index3"]
     .}: Option[string]
     field2* {.
-      dbIndex: @["field1_field2", "field1_field2_field3"]
+      dbIndex: @["index2", "index3"]
     .}: Option[string]
     field3* {.
-      dbIndex: @["field1_field2_field3"]
+      dbIndex: @["index3"]
     .}: Option[string]
 
-## field1 will only create field1 column indexing
-## field1_field2 will group field1 and field2
-## field1_field2_field3 will group and combine field1, field2, and field3
+## index1 will only create field1 column indexing
+## index2 will group field1 and field2
+## index3 will group and combine field1, field2, and field3
 ```
 
 ***{.dbIgnore.}***: this is special pragma, field with this pragma will ignored form database table column creation and from database query
@@ -459,7 +459,7 @@ kbase.createTable(Posts())
 let userId = kbase.insert(
   Users(
     name: some "Foo",
-    uuid: some $genOid(),
+    uuid: some $genUUID(),
     lastUpdate: some "2025-01-30",
     isActive: some true
   )
@@ -475,19 +475,19 @@ let usersInserted = kbase.insert(
   @[
     Users(
       name: some "Foo",
-      uuid: some $genOid(),
+      uuid: some $genUUID(),
       lastUpdate: some "2025-01-30",
       isActive: some true
     ),
     Users(
       name: some "Bar",
-      uuid: some $genOid(),
+      uuid: some $genUUID(),
       lastUpdate: some "2025-01-30",
       isActive: some true
     ),
     Users(
       name: some "John",
-      uuid: some $genOid(),
+      uuid: some $genUUID(),
       lastUpdate: some "2025-01-30",
       isActive: some true
     )
@@ -505,7 +505,7 @@ else:
 let userId = kbase.insertRow(
   sqlBuild.
   insert(("name", "uuid", "last_update", "is_active")).
-  value(("Foo", $genOid(), "2025-01-30", true)).
+  value(("Foo", $genUUID(), "2025-01-30", true)).
   table("Users")
 )
 
@@ -520,9 +520,9 @@ let insertedId = kbase.execQueryAffectedRows(
   insert(("name", "uuid", "last_update", "is_active")).
   value(
     @[
-      ("Foo", $genOid(), "2025-01-30", true),
-      ("Bar", $genOid(), "2025-01-30", true),
-      ("John", $genOid(), "2025-01-30", true)
+      ("Foo", $genUUID(), "2025-01-30", true),
+      ("Bar", $genUUID(), "2025-01-30", true),
+      ("John", $genUUID(), "2025-01-30", true)
     ]
   ).
   table("Users")
