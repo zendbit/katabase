@@ -521,7 +521,7 @@ proc insert*[T: PostgreSql|MySql|SqLite, T2: ref object](
   when table is DbModel2:
     ## if DbModel2 insert uuid, createdAt, updatedAt, isActive
     let insertedAt = now().utc.format("yyyy-MM-dd HH:mm:ss")
-    table.uuid = some $genUUID()
+    table.uuid = some uuid
     table.createdAt = some insertedAt
     table.updatedAt = some insertedAt
     table.isActive = some true
