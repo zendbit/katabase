@@ -509,11 +509,14 @@ proc createTableAsync*[T: ref object](
   self.createTable(table)
 
 
-proc insert*[T: PostgreSql|MySql|SqLite, T2: ref object](
+proc insert*[T: PostgreSql|MySql|SqLite, T2: DbModel|DbModel2](
     session: T,
     table: T2
-  ): BiggestInt {.gcsafe.} = ## \
+  ): tuple[id: BiggestInt, uuid: string] {.gcsafe.} = ## \
   ## insert
+
+  var id: BiggestInt
+  var uuid: string = $genUUID()
 
   when table is DbModel2:
     ## if DbModel2 insert uuid, createdAt, updatedAt, isActive
@@ -535,27 +538,50 @@ proc insert*[T: PostgreSql|MySql|SqLite, T2: ref object](
   let insertValues: seq[JsonNode] =
       insertDbColumns.map(proc (c: DbColumnModel): JsonNode = c.value)
 
-  session.insertRow(
-    sqlBuild.
-    insert(columnNames).
-    table(t.validName).
-    value(insertValues)
-  )
+  id = session.insertRow(
+      sqlBuild.
+      insert(columnNames).
+      table(t.validName).
+      value(insertValues)
+    )
+
+  ## return tuple (id: val, uuid: val)
+  (id, uuid)
 
 
-proc insertAsync*[T: PostgreSql|MySql|SqLite, T2: ref object](
+proc insertAsync*[T: PostgreSql|MySql|SqLite](
     session: T,
-    t: T2
+    t: DbModel
   ): Future[BiggestInt] {.async gcsafe.} = ## \
+  ## insert
+
+  session.insert(t).id
+
+
+proc insertAsync*[T: PostgreSql|MySql|SqLite](
+    session: T,
+    t: DbModel2
+  ): Future[tuple[id: BiggestInt, uuid: string]] {.async gcsafe.} = ## \
   ## insert
 
   session.insert(t)
 
 
-proc insert*[T: ref object](
+proc insert*(
     self: Katabase,
-    table: T
+    table: DbModel
   ): BiggestInt {.gcsafe.} = ## \
+  ## insert into table
+
+  let conn = self.open
+  result = conn.insert(table).id
+  conn.close
+
+
+proc insert*(
+    self: Katabase,
+    table: DbModel2
+  ): tuple[id: BiggestInt, uuid: string] {.gcsafe.} = ## \
   ## insert into table
 
   let conn = self.open
@@ -563,10 +589,19 @@ proc insert*[T: ref object](
   conn.close
 
 
-proc insertAsync*[T: ref object](
+proc insertAsync*(
     self: Katabase,
-    table: T
+    table: DbModel
   ): Future[BiggestInt] {.async gcsafe.} = ## \
+  ## insert into table async
+
+  self.insert(table).id
+
+
+proc insertAsync*(
+    self: Katabase,
+    table: DbModel2
+  ): Future[tuple[id: BiggestInt, uuid: string]] {.async gcsafe.} = ## \
   ## insert into table async
 
   self.insert(table)
@@ -605,7 +640,7 @@ proc update*[T: PostgreSql|MySql|SqLite, T2: ref object](
   ## update database
 
   when table is DbModel2:
-    ## if DbModel2 insert uuid, createdAt, updatedAt, isActive
+    ## if DbModel2 update updatedAt
     let updatedAt = now().utc.format("yyyy-MM-dd HH:mm:ss")
     table.updatedAt = some updatedAt
 
