@@ -65,7 +65,37 @@ let kbase = newKatabase[MySql](
 for PostgreSql connection, replace **\[MySql\]** with **\[PostgreSql\]**
 
 ## Create katabase type model
-To interact with katabase we need to define type that derived from DbModel
+To interact with katabase we need to define type that derived from DbModel.
+
+From version 0.1.14 there is DbModel2 instead, DbModel2 is derived from DbModel and automatic has ***uuid, updatedAt, insertedAt, isActive*** fields. The values of those fields will added automatically each time we insert data and the updatedAt will automatically updated when data updated.
+
+```nim
+## Example using DbModel
+type
+  Model1 {.dbTable.} = ref object of DbModel
+
+type
+  Model2 {.dbTable.} = ref object of DbModel2
+
+# the different is on DbModel2 will implicitly add these fields to the table
+#    uuid* {.dbUUID dbUnique dbIndex.}: Option[string]
+#    createdAt* {.dbColumnType: "TIMESTAMP".}: Option[string]
+#    updatedAt* {.dbColumnType: "TIMESTAMP".}: Option[string]
+#    isActive*: Option[bool]
+#
+```
+
+***Note***
+
+The main different betwen DBModel and DbModel2 is the result of the insert when using ORM.
+
+- insert result of DbModel is the id --> BiggestInt
+- the result of DBModel2 is tuple (id: BiggestInt, uuid: string). Then you can use .id to get id and .uuid to get uuid value
+
+***NOTE***
+
+
+Example using DbModel
 ```nim
 import katabase
 
