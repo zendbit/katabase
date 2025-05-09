@@ -158,11 +158,9 @@ proc `$`*(sb: SqlBuilder): string {.gcsafe.} = ## \
 
         if sb.unique.len != 0:
           var unique: seq[string]
-          unique.add("UNIQUE")
-          unique.add("(")
-          unique.add(sb.unique.join(", "))
-          unique.add(")")
-          createTableProperties.add(unique.join(" "))
+          for u in sb.unique:
+            unique.add(&"UNIQUE ( {u} )")
+          createTableProperties.add(unique.join(", "))
 
         query.add(createTableProperties.join(", "))
         query.add(")")
