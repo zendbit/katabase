@@ -30,6 +30,9 @@ type
     encoding*: string
 
 
+var errorMsg {.threadvar.}: string
+
+
 proc newKatabase*[T: PostgreSql|MySql|SqLite](
     host: string,
     database: string,
@@ -41,6 +44,7 @@ proc newKatabase*[T: PostgreSql|MySql|SqLite](
   ## create new katabase for database connection
   ## newKatabase[PostgreSql|MySql|SqLite](....)
 
+  errorMsg = ""
   result = Katabase[T](
     host: host,
     database: database,
@@ -50,10 +54,38 @@ proc newKatabase*[T: PostgreSql|MySql|SqLite](
   )
 
 
+proc clearError(self: Katabase) = ## \
+  ## reset error message
+
+  errorMsg = ""
+
+
+proc putError(
+    self: Katabase,
+    error: string
+  ) = ## \
+  ## put error message
+
+  errorMsg = error
+
+
+proc hasError*(self: Katabase): bool = ## \
+  ## check if has error message
+
+  errorMsg != ""
+
+
+proc getError*(self: Katabase): string = ## \
+  ## get error message
+
+  errorMsg
+
+
 proc open[T](self: Katabase[T]): T {.gcsafe.} = ## \
   ## open database connection
 
   try:
+    self.clearError
     when self.connType is PostgreSql:
       var dbPort = $self.port
       if $self.port == $Port(0): dbPort = $Port(5432)
@@ -81,16 +113,20 @@ proc open[T](self: Katabase[T]): T {.gcsafe.} = ## \
       if not result.setEncoding(self.encoding):
         echo &"Failed to set encoding to: {self.encoding}"
 
-  except CatchableError as ex:
+  except Exception as ex:
     let port = $self.port
     let connection = $ type self.connType
-    echo &"Failed to open database"
-    echo &"Connection: {connection}"
-    echo &"User: {self.user}"
-    echo &"Host: {self.host}"
-    echo &"Port: {port}"
-    echo &"Database: {self.database}"
-    echo &"Error: {ex.msg}"
+    self.putError(
+      &"Failed to open database\n" &
+      &"Connection: {connection}\n" &
+      &"User: {self.user}\n" &
+      &"Host: {self.host}\n" &
+      &"Port: {port}\n" &
+      &"Database: {self.database}\n" &
+      &"Error: {ex.msg}\n"
+    )
+
+    echo self.getError
 
 
 proc whichDialect[T: Katabase|PostgreSql|MySql|SqLite](
@@ -115,12 +151,16 @@ proc execQuery*[T: PostgreSql|MySql|SqLite](
   ## execute query
 
   try:
+    errorMsg = ""
     session.exec(sql $query)
 
-  except CatchableError as ex:
-    echo &"Failed to execute query"
-    echo &"Query: {query}"
-    echo &"Error: {ex.msg}"
+  except Exception as ex:
+    errorMsg =
+      &"Failed to execute query" &
+      &"Query: {query}" &
+      &"Error: {ex.msg}"
+
+    echo errorMsg
 
 
 proc execQueryAsync*[T: PostgreSql|MySql|SqLite](
@@ -160,12 +200,16 @@ proc execQueryAffectedRows*[T: PostgreSql|MySql|SqLite](
   ## usually for updates statement
 
   try:
+    errorMsg = ""
     result = session.execAffectedRows(sql $query)
 
-  except CatchableError as ex:
-    echo &"Failed to execute query"
-    echo &"Query: {query}"
-    echo &"Error: {ex.msg}"
+  except Exception as ex:
+    errorMsg =
+      &"Failed to execute query" &
+      &"Query: {query}" &
+      &"Error: {ex.msg}"
+
+    echo errorMsg
 
 
 proc execQueryAffectedRowsAsync*[T: PostgreSql|MySql|SqLite](
@@ -207,16 +251,20 @@ proc queryRows*[T: PostgreSql|MySql|SqLite](
   ## get all rows from query statement
 
   try:
+    errorMsg = ""
     let rows = session.getAllRows(sql $query)
     result = rows.map(
         proc (r: seq[string]): RowResult =
           (query.columnNames, r)
       )
 
-  except CatchableError as ex:
-    echo &"Failed to execute query"
-    echo &"Query: {query}"
-    echo &"Error: {ex.msg}"
+  except Exception as ex:
+    errorMsg =
+      &"Failed to execute query" &
+      &"Query: {query}" &
+      &"Error: {ex.msg}"
+
+    echo errorMsg
 
 
 proc queryRowsAsync*[T: PostgreSql|MySql|SqLite](
@@ -255,13 +303,17 @@ proc queryOneRow*[T: PostgreSql|MySql|SqLite](
   ## get row from query
 
   try:
+    errorMsg = ""
     let res = session.getRow(sql $query)
     result = (query.columnNames, res)
 
-  except CatchableError as ex:
-    echo &"Failed to execute query"
-    echo &"Query: {query}"
-    echo &"Error: {ex.msg}"
+  except Exception as ex:
+    errorMsg =
+      &"Failed to execute query" &
+      &"Query: {query}" &
+      &"Error: {ex.msg}"
+
+    echo errorMsg
 
 
 proc queryOneRowAsync*[T: PostgreSql|MySql|SqLite](
@@ -300,12 +352,16 @@ proc queryValue*[T: PostgreSql|MySql|SqLite](
   ## get single value of first row first column
 
   try:
+    errorMsg = ""
     result = session.getValue(sql $query)
 
-  except CatchableError as ex:
-    echo &"Failed to execute query"
-    echo &"Query: {query}"
-    echo &"Error: {ex.msg}"
+  except Exception as ex:
+    errorMsg =
+      &"Failed to execute query" &
+      &"Query: {query}" &
+      &"Error: {ex.msg}"
+
+    echo errorMsg
 
 
 proc queryValueAsync*[T: PostgreSql|MySql|SqLite](
@@ -345,12 +401,16 @@ proc insertRow*[T: PostgreSql|MySql|SqLite](
   ## primary key should named with id
 
   try:
+    errorMsg = ""
     result = session.insertId(sql $query)
 
-  except CatchableError as ex:
-    echo &"Failed to execute query"
-    echo &"Query: {query}"
-    echo &"Error: {ex.msg}"
+  except Exception as ex:
+    errorMsg =
+      &"Failed to execute query" &
+      &"Query: {query}" &
+      &"Error: {ex.msg}"
+
+    echo errorMsg
 
 
 proc insertRowAsync*[T: PostgreSql|MySql|SqLite](
@@ -558,13 +618,13 @@ proc insertAsync*[T: PostgreSql|MySql|SqLite](
   session.insert(t).id
 
 
-#[proc insertAsync*[T: PostgreSql|MySql|SqLite](
+proc insertAsync*[T: PostgreSql|MySql|SqLite](
     session: T,
     t: DbModel2
   ): Future[tuple[id: BiggestInt, uuid: string]] {.async gcsafe.} = ## \
   ## insert
 
-  session.insert(t)]#
+  session.insert(t)
 
 
 proc insert*[T: DbModel](
@@ -619,7 +679,7 @@ proc insert*[T: DbModel|DbModel2](
     for t in table: discard conn.insert(t)
     result = table.len
     conn.transactionCommit
-  except CatchableError: conn.transactionRollback
+  except Exception: conn.transactionRollback
   conn.close
 
 
@@ -703,12 +763,8 @@ proc update*[T: DbModel|DbModel2](
   ## update database
 
   let conn = self.open
-  try:
-    conn.transactionBegin
-    for t in table: discard conn.update(t, condition)
-    result = table.len
-    conn.transactionCommit
-  except CatchableError: conn.transactionRollback
+  for t in table: discard conn.update(t, condition)
+  result = table.len
   conn.close
 
 
@@ -932,12 +988,8 @@ proc delete*[T: DbModel|DbModel2](
   ## delete from database
 
   let conn = self.open
-  try:
-    conn.transactionBegin
-    for t in table: discard conn.delete(t, condition)
-    result = table.len
-    conn.transactionCommit
-  except CatchableError: conn.transactionRollback
+  for t in table: discard conn.delete(t, condition)
+  result = table.len
   conn.close
 
 
@@ -949,3 +1001,11 @@ proc deleteAsync*[T: DbModel|DbModel2](
   ## delete from database async
 
   self.delete(table, condition)
+
+
+proc checkConnection*(self: Katabase) {.gcsafe.} = ## \
+  ## check connection to database
+
+  let conn = self.open
+  if not self.hasError:
+    conn.close

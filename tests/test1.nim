@@ -101,6 +101,13 @@ type
 
 
 test "test katabase functionality":
+  ## test connection show error if connection not exist
+  echo "=== test error connection, must error and show the error msg"
+  let kbaseCheck = newKatabase[MySql]("", "", "", "")
+  kbaseCheck.checkConnection
+  if kbaseCheck.hasError:
+    echo kbaseCheck.getError
+
   ##
   ## example bellow will connect to sqlite "test.db"
   ##
@@ -480,6 +487,24 @@ test "test katabase functionality":
     echo "========="
     echo "Post id " & $post["id"].getBiggestInt.val
     echo "Post content " & post["post"]
+
+  ## test get error message
+  posts = kbase.queryRows(
+      sqlBuild.
+      select(("post", "usersIddd")).
+      table("Posts").
+      where(
+        "Posts.usersId IN (?)",
+        $sqlBuild.
+        select("id").
+        table("tbl_users").
+        where("tbl_users.name=?", "Blah")
+      )
+    )
+
+  if kbase.hasError:
+    echo kbase.getError
+
 
   ## remove test database
   "test.db".Path.removeFile
