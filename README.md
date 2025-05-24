@@ -445,6 +445,33 @@ available proc for SqlBuilder
 - **leftJoin(table: string, condition: string)**
 - **rightJoin(table: string, condition: string)**
 
+## Error checking after do query or want to check connection
+In some case, we want to check connection we can do with
+```nim
+## this should return error
+let kbase = newKatabase[MySql]("", "", "", "")
+kbase.checkConnection
+if not kbase.hasError:
+  do_some_stuff
+else:
+  ## handle error
+  ## access error message by
+  echo kbase.getError
+
+## check error after do action like CRUD
+let userId = kbase.insert(
+  Users(
+    name: some "Foo",
+    uuid: some $genUUID(),
+    lastUpdate: some "2025-01-30",
+    isActive: some true
+  )
+)
+
+if not kbase.hasError:
+  do_sfuff_with userId
+```
+
 ## Work with ORM
 Before we deepdive into SqlBuilder usages, we will start to work with ORM in katabase. Let start using our example
 ```nim
