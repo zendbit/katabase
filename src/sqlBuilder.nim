@@ -270,7 +270,10 @@ proc toSqlBuilderValue*[T](
     for l in value:
       var vals: seq[JsonNode]
       for v in l.fields:
-        vals.add(%v)
+        when v is SqlBuilder:
+          vals.add((% &"SqlBuilder:{v}").toDbValue)
+        else:
+          vals.add(%v)
       result.add(vals.toDbValue(true))
 
   when value is seq[JsonNode]:
@@ -300,9 +303,15 @@ proc toSqlBuilderParam*[T: seq|tuple|string](
   when value is string:
     result.add(value)
 
+  when value is SqlBuilder:
+    result.add($value)
+
   when value is tuple:
     for v in value.fields:
-      result.add(v)
+      when v is SqlBuilder:
+        result.add($v)
+      else:
+        result.add(v)
 
   when value is seq:
     result = value
