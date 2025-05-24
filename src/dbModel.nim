@@ -261,7 +261,7 @@ proc toDbTable*[T: ref object](
       when not v.hasCustomPragma(dbIgnore):
         var column = newDbColumnModel(dialect)
         column.name = k
-        var columnName = column.name
+        var columnName {.used.} = column.name
 
         when v.hasCustomPragma(dbColumnName):
           column.alias = v.getCustomPragmaVal(dbColumnName)
