@@ -113,7 +113,7 @@ proc open[T](self: Katabase[T]): T {.gcsafe.} = ## \
       if not result.setEncoding(self.encoding):
         echo &"Failed to set encoding to: {self.encoding}"
 
-  except Exception as ex:
+  except CatchableError, Defect:
     let port = $self.port
     let connection = $ type self.connType
     self.putError(
@@ -123,7 +123,7 @@ proc open[T](self: Katabase[T]): T {.gcsafe.} = ## \
       &"Host: {self.host}\n" &
       &"Port: {port}\n" &
       &"Database: {self.database}\n" &
-      &"Error: {ex.msg}\n"
+      &"Error: {getCurrentExceptionMsg()}\n"
     )
 
     echo self.getError
@@ -154,11 +154,11 @@ proc execQuery*[T: PostgreSql|MySql|SqLite](
     errorMsg = ""
     session.exec(sql $query)
 
-  except Exception as ex:
+  except CatchableError, Defect:
     errorMsg =
       &"Failed to execute query" &
       &"Query: {query}" &
-      &"Error: {ex.msg}"
+      &"Error: {getCurrentExceptionMsg()}"
 
     echo errorMsg
 
@@ -203,11 +203,11 @@ proc execQueryAffectedRows*[T: PostgreSql|MySql|SqLite](
     errorMsg = ""
     result = session.execAffectedRows(sql $query)
 
-  except Exception as ex:
+  except [CatchableError, Defect]:
     errorMsg =
       &"Failed to execute query" &
       &"Query: {query}" &
-      &"Error: {ex.msg}"
+      &"Error: {getCurrentExceptionMsg()}"
 
     echo errorMsg
 
@@ -258,11 +258,11 @@ proc queryRows*[T: PostgreSql|MySql|SqLite](
           (query.columnNames, r)
       )
 
-  except Exception as ex:
+  except [CatchableError, Defect]:
     errorMsg =
       &"Failed to execute query" &
       &"Query: {query}" &
-      &"Error: {ex.msg}"
+      &"Error: {getCurrentExceptionMsg()}"
 
     echo errorMsg
 
@@ -307,11 +307,11 @@ proc queryOneRow*[T: PostgreSql|MySql|SqLite](
     let res = session.getRow(sql $query)
     result = (query.columnNames, res)
 
-  except Exception as ex:
+  except CatchableError, Defect:
     errorMsg =
       &"Failed to execute query" &
       &"Query: {query}" &
-      &"Error: {ex.msg}"
+      &"Error: {getCurrentExceptionMsg()}"
 
     echo errorMsg
 
@@ -355,11 +355,11 @@ proc queryValue*[T: PostgreSql|MySql|SqLite](
     errorMsg = ""
     result = session.getValue(sql $query)
 
-  except Exception as ex:
+  except CatchableError, Defect:
     errorMsg =
       &"Failed to execute query" &
       &"Query: {query}" &
-      &"Error: {ex.msg}"
+      &"Error: {getCurrentExceptionMsg()}"
 
     echo errorMsg
 
@@ -404,11 +404,11 @@ proc insertRow*[T: PostgreSql|MySql|SqLite](
     errorMsg = ""
     result = session.insertId(sql $query)
 
-  except Exception as ex:
+  except CatchableError, Defect:
     errorMsg =
       &"Failed to execute query" &
       &"Query: {query}" &
-      &"Error: {ex.msg}"
+      &"Error: {getCurrentExceptionMsg()}"
 
     echo errorMsg
 
@@ -679,7 +679,7 @@ proc insert*[T: DbModel|DbModel2](
     for t in table: discard conn.insert(t)
     result = table.len
     conn.transactionCommit
-  except Exception: conn.transactionRollback
+  except CatchableError, Defect: conn.transactionRollback
   conn.close
 
 

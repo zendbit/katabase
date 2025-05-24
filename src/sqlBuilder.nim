@@ -261,7 +261,10 @@ proc toSqlBuilderValue*[T](
   ## user can pas seq or tuple
 
   when value isnot seq and value isnot tuple:
-    result.add(@[(%value).toDbValue(true)])
+    when value is SqlBuilder:
+      result.add(@[(% &"SqlBuilder:{value}").toDbValue])
+    else:
+      result.add(@[(%value).toDbValue(true)])
 
   when value is seq[tuple]:
     for l in value:
@@ -280,7 +283,10 @@ proc toSqlBuilderValue*[T](
   when value is tuple:
     var vals: seq[JsonNode]
     for v in value.fields:
-      vals.add(%v)
+      when v is SqlBuilder:
+        vals.add((% &"SqlBuilder:{v}").toDbValue)
+      else:
+        vals.add(%v)
     result.add(vals.toDbValue(true))
 
 

@@ -491,11 +491,11 @@ test "test katabase functionality":
   ## test get error message
   posts = kbase.queryRows(
       sqlBuild.
-      select(("post", "usersIddd")).
+      select(("post", "usersId")).
       table("Posts").
       where(
         "Posts.usersId IN (?)",
-        $sqlBuild.
+        sqlBuild.
         select("id").
         table("tbl_users").
         where("tbl_users.name=?", "Blah")

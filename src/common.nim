@@ -90,8 +90,14 @@ proc toDbValue*(
   ## to db value string
 
   if val.kind == JString:
-    if escape: val.getStr.dbEscape
-    else: val.getStr
+    let value = val.getStr
+    if value.startsWith("SqlBuilder:"):
+      return value.replace("SqlBuilder:", "")
+
+    if escape:
+      return val.getStr.dbEscape
+
+    value
   else: $val
 
 

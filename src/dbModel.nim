@@ -325,7 +325,7 @@ proc toDbTable*[T: ref object](
         result.columns.add(column)
 
   else:
-    raise newException(ValueError, &"type not contains dbTable pragma")
+    raise newException(ValueError, "type not contains dbTable pragma")
 
 
 proc toDbTable*(
