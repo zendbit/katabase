@@ -54,14 +54,14 @@ proc newKatabase*[T: PostgreSql|MySql|SqLite](
   )
 
 
-proc clearError(self: Katabase) = ## \
+proc clearError[T: Katabase|PostgreSql|MySql|SqLite](self: T) = ## \
   ## reset error message
 
   errorMsg = ""
 
 
-proc putError(
-    self: Katabase,
+proc putError[T: Katabase|PostgreSql|MySql|SqLite](
+    self: T,
     error: string
   ) = ## \
   ## put error message
@@ -69,13 +69,13 @@ proc putError(
   errorMsg = error
 
 
-proc hasError*(self: Katabase): bool = ## \
+proc hasError*[T: Katabase|PostgreSql|MySql|SqLite](self: T): bool = ## \
   ## check if has error message
 
   errorMsg != ""
 
 
-proc getError*(self: Katabase): string = ## \
+proc getError*[T: Katabase|PostgreSql|MySql|SqLite](self: T): string = ## \
   ## get error message
 
   errorMsg
@@ -151,16 +151,17 @@ proc execQuery*[T: PostgreSql|MySql|SqLite](
   ## execute query
 
   try:
-    errorMsg = ""
+    session.clearError
     session.exec(sql $query)
 
   except CatchableError, Defect:
-    errorMsg =
+    session.PutError(
       &"Failed to execute query" &
       &"Query: {query}" &
       &"Error: {getCurrentExceptionMsg()}"
+    )
 
-    echo errorMsg
+    echo session.getError
 
 
 proc execQueryAsync*[T: PostgreSql|MySql|SqLite](
@@ -200,16 +201,17 @@ proc execQueryAffectedRows*[T: PostgreSql|MySql|SqLite](
   ## usually for updates statement
 
   try:
-    errorMsg = ""
+    session.clearError
     result = session.execAffectedRows(sql $query)
 
   except [CatchableError, Defect]:
-    errorMsg =
+    session.putError(
       &"Failed to execute query" &
       &"Query: {query}" &
       &"Error: {getCurrentExceptionMsg()}"
+    )
 
-    echo errorMsg
+    echo session.getError
 
 
 proc execQueryAffectedRowsAsync*[T: PostgreSql|MySql|SqLite](
@@ -251,7 +253,7 @@ proc queryRows*[T: PostgreSql|MySql|SqLite](
   ## get all rows from query statement
 
   try:
-    errorMsg = ""
+    session.clearError
     let rows = session.getAllRows(sql $query)
     result = rows.map(
         proc (r: seq[string]): RowResult =
@@ -259,12 +261,13 @@ proc queryRows*[T: PostgreSql|MySql|SqLite](
       )
 
   except [CatchableError, Defect]:
-    errorMsg =
+    session.putError(
       &"Failed to execute query" &
       &"Query: {query}" &
       &"Error: {getCurrentExceptionMsg()}"
+    )
 
-    echo errorMsg
+    echo session.getError
 
 
 proc queryRowsAsync*[T: PostgreSql|MySql|SqLite](
@@ -303,17 +306,18 @@ proc queryOneRow*[T: PostgreSql|MySql|SqLite](
   ## get row from query
 
   try:
-    errorMsg = ""
+    session.clearError
     let res = session.getRow(sql $query)
     result = (query.columnNames, res)
 
   except CatchableError, Defect:
-    errorMsg =
+    session.putError(
       &"Failed to execute query" &
       &"Query: {query}" &
       &"Error: {getCurrentExceptionMsg()}"
+    )
 
-    echo errorMsg
+    echo session.getError
 
 
 proc queryOneRowAsync*[T: PostgreSql|MySql|SqLite](
@@ -352,16 +356,17 @@ proc queryValue*[T: PostgreSql|MySql|SqLite](
   ## get single value of first row first column
 
   try:
-    errorMsg = ""
+    session.clearError
     result = session.getValue(sql $query)
 
   except CatchableError, Defect:
-    errorMsg =
+    session.putError(
       &"Failed to execute query" &
       &"Query: {query}" &
       &"Error: {getCurrentExceptionMsg()}"
+    )
 
-    echo errorMsg
+    echo session.getError
 
 
 proc queryValueAsync*[T: PostgreSql|MySql|SqLite](
@@ -401,16 +406,17 @@ proc insertRow*[T: PostgreSql|MySql|SqLite](
   ## primary key should named with id
 
   try:
-    errorMsg = ""
+    session.clearError
     result = session.insertId(sql $query)
 
   except CatchableError, Defect:
-    errorMsg =
+    session.putError(
       &"Failed to execute query" &
       &"Query: {query}" &
       &"Error: {getCurrentExceptionMsg()}"
+    )
 
-    echo errorMsg
+    echo session.getError
 
 
 proc insertRowAsync*[T: PostgreSql|MySql|SqLite](
@@ -791,9 +797,12 @@ proc select*[T: PostgreSql|MySql|SqLite, T2: DbModel|DbModel2](
     select(t.columnValidNames).
     table(t.validName)
 
-  session.queryRows(selectRows).
-    toDbTables(T2, session.whichDialect, false).
-    to(T2)
+  let queryResult = session.queryRows(selectRows)
+
+  if not session.hasError:
+    result = queryResult.
+      toDbTables(T2, session.whichDialect, false).
+      to(T2)
 
 
 proc selectAsync*[T: PostgreSql|MySql|SqLite, T2: DbModel|DbModel2](
@@ -841,11 +850,14 @@ proc selectOne*[T: PostgreSql|MySql|SqLite, T2: DbModel|DbModel2](
     select(t.columnValidNames).
     table(t.validName)
 
-  let queryResult = session.queryOneRow(selectRow).
-    toDbTable(T2, session.whichDialect, false).
-    to(T2)
+  let queryResult = session.queryOneRow(selectRow)
 
-  if queryResult.id.isSome: result = queryResult
+  if not session.hasError:
+    let queryResult = queryResult.
+      toDbTable(T2, session.whichDialect, false).
+      to(T2)
+
+    if queryResult.id.isSome: result = queryResult
 
 
 proc selectOneAsync*[T: PostgreSql|MySql|SqLite, T2: DbModel|DbModel2](
@@ -893,7 +905,10 @@ proc count*[T: PostgreSql|MySql|SqLite, T2: DbModel|DbModel2](
     select("COUNT (id) AS count").
     table(t.validName)
 
-  session.queryOneRow(selectRow)[0].parseBiggestInt
+  let countResult = session.queryOneRow(selectRow)
+
+  if not session.hasError:
+    result = countResult[0].parseBiggestInt
 
 
 proc countAsync*[T: PostgreSql|MySql|SqLite, T2: DbModel|DbModel2](
