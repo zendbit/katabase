@@ -155,7 +155,7 @@ proc execQuery*[T: PostgreSql|MySql|SqLite](
     session.exec(sql $query)
 
   except CatchableError, Defect:
-    session.PutError(
+    session.putError(
       &"Failed to execute query" &
       &"Query: {query}" &
       &"Error: {getCurrentExceptionMsg()}"
