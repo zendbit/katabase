@@ -99,6 +99,8 @@ type
       dbColumnType: "VARCHAR"
     .}: Option[string]
 
+  Test* {.dbTable.} = ref object of DbModel2
+
 
 test "test katabase functionality":
   ## test connection show error if connection not exist
@@ -138,6 +140,7 @@ test "test katabase functionality":
   kbase.createTable(Posts())
   kbase.createTable(Comments())
   kbase.createTable(UsersDetails())
+  kbase.createTable(Test())
 
   ## test create index
   echo "== Test create index"

@@ -244,6 +244,8 @@ proc toSql*(self: DbTableModel): SqlBuilder {.gcsafe.} = ## \
     sqlb.primaryKey("id AUTOINCREMENT")
   else: sqlb.primaryKey("id")
 
+  sqlb
+
 
 proc toDbTable*[T: ref object](
     t: T,
