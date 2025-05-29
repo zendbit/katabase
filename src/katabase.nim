@@ -591,7 +591,8 @@ proc insert*[T: PostgreSql|MySql|SqLite, T2: ref object](
     table.uuid = some uuid
     table.createdAt = some insertedAt
     table.updatedAt = some insertedAt
-    table.isActive = some true
+    if table.isActive.isNone:
+      table.isActive = some true
 
   let t = table.toDbTable(session.whichDialect)
   let insertDbColumns: seq[DbColumnModel] =
