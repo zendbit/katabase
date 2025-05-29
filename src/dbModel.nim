@@ -180,6 +180,8 @@ proc toSql*(self: DbTableModel): SqlBuilder {.gcsafe.} = ## \
     create.
     table(self.validName)
 
+  sqlb.dialect = self.dialect
+
   var isIdAutoIncrement = false
 
   for column in self.columns:
@@ -222,13 +224,19 @@ proc toSql*(self: DbTableModel): SqlBuilder {.gcsafe.} = ## \
     ## if default reference to id make it BIGINT
     if not column.reference.isNil: columnType = "BIGINT"
 
+    let columnOption = proc (column: DbColumnModel): string =
+      if column.isAutoIncrement and column.dialect == DbMySql:
+        result = "AUTO_INCREMENT"
+      elif column.isAutoIncrement and column.dialect == DbSqLite:
+        result = "AUTOINCREMENT"
+        if column.isPrimaryKey: result = "PRIMARY KEY " & result
+      else: result = ""
+
     sqlb.column(
       column.validName,
       columnType,
       column.columnLength,
-      option =
-        if column.isAutoIncrement and column.dialect == DbMySql: "AUTO_INCREMENT"
-        else: "")
+      option = columnOption(column))
 
     if not column.reference.isNil:
       sqlb.foreignKey(
@@ -240,9 +248,11 @@ proc toSql*(self: DbTableModel): SqlBuilder {.gcsafe.} = ## \
   for _, v in self.uniqueColumns:
     sqlb.unique(v.join(", "))
 
-  if isIdAutoIncrement and self.dialect == DBSqLite:
-    sqlb.primaryKey("id AUTOINCREMENT")
-  else: sqlb.primaryKey("id")
+  ## sqlite not supported primary key definition
+  ## using separated column definition
+  ## sqlite should implicitly define primary key when define column
+  if isIdAutoIncrement and self.dialect != DBSqLite:
+    sqlb.primaryKey("id")
 
   sqlb
 

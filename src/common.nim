@@ -37,6 +37,7 @@ type
     DbPostgreSql
     DbMySql
     DbSqLite
+    None
 
   PostgreSql* = db_postgres.DbConn
   MySql* = db_mysql.DbConn

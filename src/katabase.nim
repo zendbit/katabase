@@ -471,6 +471,7 @@ proc transactionBegin*[T: PostgreSql|MySql|SqLite](
     session.exec(sql "START TRANSACTION")
   of DbSqLite:
     session.exec(sql "BEGIN TRANSACTION")
+  else: discard
 
 
 proc transactionBeginAsync*[T: PostgreSql|MySql|SqLite](

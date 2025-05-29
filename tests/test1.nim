@@ -335,6 +335,7 @@ test "test katabase functionality":
     )
 
   for user in usersRaw:
+    echo user
     echo "======="
     echo "User name " & user["name"]
     echo "User id " & $user["id"].getInt.val

@@ -6,6 +6,7 @@ export common
 
 type
   SqlBuilder* = ref object of RootObj
+    dialect*: DbDialect
     isDrop: bool
     select: seq[string]
     isSelectDistinct: bool
@@ -43,7 +44,7 @@ type
     onDelete: string
 
 
-proc newSqlBuilder*(): SqlBuilder {.gcsafe.} = ## \
+proc newSqlBuilder*(dialect: DbDialect = None): SqlBuilder {.gcsafe.} = ## \
   ## create new sqlbulder object
 
   SqlBuilder(
