@@ -1,6 +1,6 @@
 # Package
 
-version       = "0.1.27"
+version       = "0.1.28"
 author        = "Amru Rosyada"
 description   = "Katabase is nimlang database ORM used in Katalis web framework, but it's not exclusively build for katalis. Supported Database is SqLite, PostgreSql and MariaDb/MySql"
 license       = "MIT"

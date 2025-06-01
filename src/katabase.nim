@@ -156,9 +156,9 @@ proc execQuery*[T: PostgreSql|MySql|SqLite](
 
   except CatchableError, Defect:
     session.putError(
-      &"Failed to execute query" &
-      &"Query: {query}" &
-      &"Error: {getCurrentExceptionMsg()}"
+      &"Failed to execute query\n" &
+      &"Query: {query}\n" &
+      &"Error: {getCurrentExceptionMsg()}\n"
     )
 
     echo session.getError
@@ -206,9 +206,9 @@ proc execQueryAffectedRows*[T: PostgreSql|MySql|SqLite](
 
   except [CatchableError, Defect]:
     session.putError(
-      &"Failed to execute query" &
-      &"Query: {query}" &
-      &"Error: {getCurrentExceptionMsg()}"
+      &"Failed to execute query\n" &
+      &"Query: {query}\n" &
+      &"Error: {getCurrentExceptionMsg()}\n"
     )
 
     echo session.getError
@@ -262,9 +262,9 @@ proc queryRows*[T: PostgreSql|MySql|SqLite](
 
   except [CatchableError, Defect]:
     session.putError(
-      &"Failed to execute query" &
-      &"Query: {query}" &
-      &"Error: {getCurrentExceptionMsg()}"
+      &"Failed to execute query\n" &
+      &"Query: {query}\n" &
+      &"Error: {getCurrentExceptionMsg()}\n"
     )
 
     echo session.getError
@@ -312,9 +312,9 @@ proc queryOneRow*[T: PostgreSql|MySql|SqLite](
 
   except CatchableError, Defect:
     session.putError(
-      &"Failed to execute query" &
-      &"Query: {query}" &
-      &"Error: {getCurrentExceptionMsg()}"
+      &"Failed to execute query\n" &
+      &"Query: {query}\n" &
+      &"Error: {getCurrentExceptionMsg()}\n"
     )
 
     echo session.getError
@@ -361,9 +361,9 @@ proc queryValue*[T: PostgreSql|MySql|SqLite](
 
   except CatchableError, Defect:
     session.putError(
-      &"Failed to execute query" &
-      &"Query: {query}" &
-      &"Error: {getCurrentExceptionMsg()}"
+      &"Failed to execute query\n" &
+      &"Query: {query}\n" &
+      &"Error: {getCurrentExceptionMsg()}\n"
     )
 
     echo session.getError
@@ -411,9 +411,9 @@ proc insertRow*[T: PostgreSql|MySql|SqLite](
 
   except CatchableError, Defect:
     session.putError(
-      &"Failed to execute query" &
-      &"Query: {query}" &
-      &"Error: {getCurrentExceptionMsg()}"
+      &"Failed to execute query\n" &
+      &"Query: {query}\n" &
+      &"Error: {getCurrentExceptionMsg()}\n"
     )
 
     echo session.getError
@@ -463,15 +463,24 @@ proc transactionBegin*[T: PostgreSql|MySql|SqLite](
   ) {.gcsafe.} = ## \
   ## transaction begin
 
-  case session.whichDialect
-  of DbPostgreSql:
-    session.exec(sql "BEGIN")
-  of DbMySql:
-    session.exec(sql "SET autocommit=0")
-    session.exec(sql "START TRANSACTION")
-  of DbSqLite:
-    session.exec(sql "BEGIN TRANSACTION")
-  else: discard
+  try:
+    session.clearError
+    case session.whichDialect
+    of DbPostgreSql:
+      session.exec(sql "BEGIN")
+    of DbMySql:
+      session.exec(sql "SET autocommit=0")
+      session.exec(sql "START TRANSACTION")
+    of DbSqLite:
+      session.exec(sql "BEGIN TRANSACTION")
+    else: discard
+  except CatchableError, Defect:
+    session.putError(
+      &"Failed to execute\n" &
+      &"Error: {getCurrentExceptionMsg()}\n"
+    )
+
+    echo session.getError
 
 
 proc transactionBeginAsync*[T: PostgreSql|MySql|SqLite](
@@ -479,7 +488,16 @@ proc transactionBeginAsync*[T: PostgreSql|MySql|SqLite](
   ) {.async gcsafe.} = ## \
   ## transaction begin async
 
-  session.transactionBegin
+  try:
+    session.clearError
+    session.transactionBegin
+  except CatchableError, Defect:
+    session.putError(
+      &"Failed to execute\n" &
+      &"Error: {getCurrentExceptionMsg()}\n"
+    )
+
+    echo session.getError
 
 
 proc transactionRollback*[T: PostgreSql|MySql|SqLite](
@@ -487,7 +505,16 @@ proc transactionRollback*[T: PostgreSql|MySql|SqLite](
   ) {.gcsafe.} = ## \
   ## transaction rollback
 
-  session.exec(sql "ROLLBACK")
+  try:
+    session.clearError
+    session.exec(sql "ROLLBACK")
+  except CatchableError, Defect:
+    session.putError(
+      &"Failed to execute\n" &
+      &"Error: {getCurrentExceptionMsg()}\n"
+    )
+
+    echo session.getError
 
 
 proc transactionRollbackAsync*[T: PostgreSql|MySql|SqLite](
@@ -495,7 +522,16 @@ proc transactionRollbackAsync*[T: PostgreSql|MySql|SqLite](
   ) {.async gcsafe.} = ## \
   ## transaction rollback async
 
-  session.transactionRollback
+  try:
+    session.clearError
+    session.transactionRollback
+  except CatchableError, Defect:
+    session.putError(
+      &"Failed to execute\n" &
+      &"Error: {getCurrentExceptionMsg()}\n"
+    )
+
+    echo session.getError
 
 
 proc transactionCommit*[T: PostgreSql|MySql|SqLite](
@@ -503,7 +539,16 @@ proc transactionCommit*[T: PostgreSql|MySql|SqLite](
   ) {.gcsafe.} = ## \
   ## transaction commit
 
-  session.exec(sql "COMMIT")
+  try:
+    session.clearError
+    session.exec(sql "COMMIT")
+  except CatchableError, Defect:
+    session.putError(
+      &"Failed to execute\n" &
+      &"Error: {getCurrentExceptionMsg()}\n"
+    )
+
+    echo session.getError
 
 
 proc transactionCommitAsync*[T: PostgreSql|MySql|SqLite](
@@ -511,7 +556,16 @@ proc transactionCommitAsync*[T: PostgreSql|MySql|SqLite](
   ) {.async gcsafe.} = ## \
   ## transaction commit async
 
-  session.transactionCommit
+  try:
+    session.clearError
+    session.transactionCommit
+  except CatchableError, Defect:
+    session.putError(
+      &"Failed to execute\n" &
+      &"Error: {getCurrentExceptionMsg()}\n"
+    )
+
+    echo session.getError
 
 
 proc createTable*[T: PostgreSql|MySql|SqLite, T2: ref object](
