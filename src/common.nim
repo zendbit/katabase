@@ -84,6 +84,17 @@ proc toSeqTable*(rows: RowResults): seq[Table[string, string]] {.gcsafe.} =
     result.add(row.toTable)
 
 
+proc toOrderedTable*(row: RowResult): OrderedTable[string, string] {.gcsafe.} =
+  result = initOrderedTable[string, string]()
+  for idx in 0..row.key.high:
+    result[row.key[idx]] = row.val[idx]
+
+
+proc toSeqOrderedTable*(rows: RowResults): seq[OrderedTable[string, string]] {.gcsafe.} =
+  for row in rows:
+    result.add(row.toOrderedTable)
+
+
 proc toDbValue*(
     val: JsonNode,
     escape: bool = false
